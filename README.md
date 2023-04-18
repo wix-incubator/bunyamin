@@ -4,12 +4,12 @@ Trace Event Logger is a powerful logging and event tracking library that provide
 
 ## Features
 
-– Based on top of [node-bunyan](https://github.com/trentm/node-bunyan).
-– Generated logs can be viewed in [Perfetto UI](https://ui.perfetto.dev), `chrome://tracing` and other debugging tools.
+- Based on top of [node-bunyan](https://github.com/trentm/node-bunyan).
+- Generated logs can be viewed in [Perfetto UI](https://ui.perfetto.dev), `chrome://tracing` and other debugging tools.
 - Multiple log levels, including `fatal`, `error`, `warn`, `info`, `debug`, and `trace`.
-– Customizable metadata for logging events, including event categories and custom properties.
+- Customizable metadata for logging events, including event categories and custom properties.
 - Support for logging duration events, with the ability to stack events and mark them as completed.
-– Aggregation of multi-process logs for advanced users.
+- Aggregation of multi-process logs for advanced users.
 
 ## Getting Started
 
