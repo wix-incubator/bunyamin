@@ -1,4 +1,13 @@
-# Trace Event Logger
+<table align=center><tr><td rowspan=2>
+  <img src="tree-logo.svg">
+</td><td height="300">
+  <img src="trace-event-logger.svg">
+</td></tr><tr><td>
+
+[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
+</td></tr></table>
 
 Trace Event Logger is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Trace Event Logger can be used in a wide range of Node.js applications and libraries.
 
