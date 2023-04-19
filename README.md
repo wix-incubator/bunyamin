@@ -9,7 +9,7 @@
 
 </td></tr></table>
 
-Trace Event Logger is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Trace Event Logger can be used in a wide range of Node.js applications and libraries.
+**Trace Event Logger** is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Trace Event Logger can be used in a wide range of Node.js applications and libraries.
 
 ## Features
 
