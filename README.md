@@ -1,5 +1,5 @@
 <table align=center><tr><td rowspan=2 width="355px">
-  <img src="docs/images/bunyamin.png" width="317">
+  <img src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/bunyamin.png" width="317">
 </td><td colspan="2" height="300" valign="top">
 
 - Based on top of [node-bunyan](https://github.com/trentm/node-bunyan).
@@ -13,9 +13,9 @@
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 </td></tr><tr><td align="center">
-  <img src="docs/images/perfetto-ui.png" height="108px" />
+  <img src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/perfetto-ui.png" height="108px" />
 </td><td align="center">
-  <img src="docs/images/chrome-trace.png" height="108px" />
+  <img src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/chrome-trace.png" height="108px" />
 </td></tr></table>
 
 **Bunyamin** is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Bunyamin can be used in a wide range of Node.js applications and libraries.

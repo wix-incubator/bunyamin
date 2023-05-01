@@ -1,6 +1,6 @@
 {
   "name": "bunyamin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Bunyan-based logger for Node.js supporting Trace Event format",
   "license": "MIT",
   "keywords": [
@@ -18,7 +18,7 @@
   "repository": {
     "url": "github:wix-incubator/bunyamin"
   },
-  "files": ["docs"],
+  "files": ["docs", "!*.{jpg,svg,png}"],
   "engines": {
     "node": ">=14.18.2"
   }
