@@ -1,0 +1,25 @@
+{
+  "name": "bunyamin",
+  "version": "0.0.0",
+  "description": "Bunyan-based logger for Node.js supporting Trace Event format",
+  "license": "MIT",
+  "keywords": [
+    "bunyan",
+    "logger",
+    "log",
+    "trace",
+    "trace-event",
+    "perfetto",
+    "perfetto-ui"
+  ],
+  "authors": [
+    "Yaroslav Serhieiev <yaroslavs@wix.com>"
+  ],
+  "repository": {
+    "url": "github:wix-incubator/bunyamin"
+  },
+  "files": ["docs"],
+  "engines": {
+    "node": ">=14.18.2"
+  }
+}

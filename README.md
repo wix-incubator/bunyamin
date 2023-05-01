@@ -1,17 +1,6 @@
-<table align=center><tr><td rowspan=2>
-  <img src="tree-logo.svg">
-</td><td height="300">
-  <img src="trace-event-logger.svg">
-</td></tr><tr><td>
-
-[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-
-</td></tr></table>
-
-**Trace Event Logger** is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Trace Event Logger can be used in a wide range of Node.js applications and libraries.
-
-## Features
+<table align=center><tr><td rowspan=2 width="355px">
+  <img src="docs/images/bunyamin.png" width="317">
+</td><td colspan="2" height="300" valign="top">
 
 - Based on top of [node-bunyan](https://github.com/trentm/node-bunyan).
 - Generated logs can be viewed in [Perfetto UI](https://ui.perfetto.dev), `chrome://tracing` and other debugging tools.
@@ -20,23 +9,35 @@
 - Support for logging duration events, with the ability to stack events and mark them as completed.
 - Aggregation of multi-process logs for advanced use scenarios.
 
+[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
+</td></tr><tr><td align="center">
+  <img src="docs/images/perfetto-ui.png" height="108px" />
+</td><td align="center">
+  <img src="docs/images/chrome-trace.png" height="108px" />
+</td></tr></table>
+
+**Bunyamin** is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Bunyamin can be used in a wide range of Node.js applications and libraries.
+
 ## Getting Started
 
-To install the Trace Event Logger, run the following command:
+To install the Bunyamin, run the following command:
 
 ```sh
-npm install trace-event-logger --save
+npm install bunyamin --save
 ```
 
-Once you have installed the logger, you can import it into your application and start logging events:
+Once you have installed the logger, you can import it into your application and start logging events as you would
+normally do with Bunyan:
 
 ```js
-import { createLogger, bunyanTraceEventStream } from 'trace-event-logger';
+import { createLogger, traceEventStream } from 'bunyamin';
 
 const logger = createLogger({
   name: 'my-app',
   streams: [
-    bunyanTraceEventStream({ outFile: '/path/to/trace.json', loglevel: 'trace' }),
+    traceEventStream({ outFile: '/path/to/trace.json', loglevel: 'trace' }),
   ],
 });
 
@@ -47,7 +48,7 @@ logger.info('Hello, world!');
 
 ### Log Levels
 
-Trace Event Logger provides several log levels that you can use to categorize your log messages:
+Bunyamin provides several log levels that you can use to categorize your log messages:
 
 * `fatal`,
 * `error`,
@@ -129,8 +130,8 @@ The child logger inherits the log level and configuration options of the parent 
 
 ## Contributing
 
-Contributions to Trace Event Logger are welcome! If you would like to contribute, please read our [contributing guidelines](CONTRIBUTING.md) and submit a pull request.
+Contributions to Bunyamin are welcome! If you would like to contribute, please read our [contributing guidelines](CONTRIBUTING.md) and submit a pull request.
 
 ## License
 
-Trace Event Logger is licensed under the [MIT License](LICENSE).
+Bunyamin is licensed under the [MIT License](LICENSE).
