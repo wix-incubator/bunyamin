@@ -87,7 +87,7 @@ export class Bunyamin {
   }
 
   #beginInternal(level: LogLevel, context: LoggerContext, message: any[]): void {
-    this.#shared.messageStack.push(context, message);
+    this.#shared.messageStack.push(context as any, message);
     this.#shared.bunyan[level](context, ...message);
   }
 
@@ -97,21 +97,21 @@ export class Bunyamin {
   }
 
   #endInternal(level: LogLevel, context: LoggerContext, customMessage: any[]): void {
-    const beginMessage = this.#shared.messageStack.pop(context);
+    const beginMessage = this.#shared.messageStack.pop(context as any);
     const message = customMessage.length > 0 ? customMessage : beginMessage;
 
-    this.#shared.bunyan[level](context, ...message);
+    this.#shared.bunyan[level](context, ...(message as any[]));
   }
 
   #instant(level: LogLevel, ...arguments_: any[]): void {
-    const { context, msg } = this.#parseArgs(null, arguments_);
+    const { context, msg } = this.#parseArgs(null as any, arguments_);
     this.#shared.bunyan.logger[level](context, ...msg);
   }
 
   #complete(level: LogLevel, maybeContext: any, maybeMessage: any, maybeAction: any) {
     const action = typeof maybeContext === 'string' ? maybeMessage : maybeAction;
     const arguments_ = maybeAction === action ? [maybeContext, maybeMessage] : [maybeContext];
-    const { context, msg } = this.#parseArgs(null, arguments_);
+    const { context, msg } = this.#parseArgs(null as any, arguments_);
     const end = (customContext?: LoggerContext) =>
       this[level].end({
         id: context.id,
