@@ -1,5 +1,5 @@
-import { getMainCategory } from './getMainCategory';
-import { TraceEventContext } from '../types';
+import { getMainCategory } from './utils';
+import type { TraceEventContext } from '../types';
 
 export class MessageStack {
   private _map: Record<string, unknown[]> = {};

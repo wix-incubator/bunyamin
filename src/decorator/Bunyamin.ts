@@ -1,11 +1,10 @@
-import path from 'path';
-import { sanitizeBunyanContext } from '../bunyan';
-import { CategoryThreadDispatcher, MessageStack } from '../threads';
-import { isError, isObject, isPromiseLike } from '../utils';
-import { LogLevel } from '../types';
-import { BunyaminConfig } from './BunyaminConfig';
-import { BunyaminLogMethod } from './BunyaminLogMethod';
-import { LoggerContext } from './LoggerContext';
+import type { CategoryThreadDispatcher, MessageStack } from '../threads';
+import { mergeCategories } from '../threads';
+import { isActionable, isObject, isPromiseLike } from '../utils';
+import type { LogLevel } from '../types';
+import type { BunyaminConfig } from './BunyaminConfig';
+import type { BunyaminLogMethod } from './BunyaminLogMethod';
+import type { LoggerContext, ResolvedLoggerContext, UserLoggerContext } from './LoggerContext';
 
 export type SharedBunyaminConfig = BunyaminConfig & {
   dispatcher: CategoryThreadDispatcher;
@@ -20,55 +19,24 @@ export class Bunyamin {
   public readonly debug = this.#setupLogMethod('debug');
   public readonly trace = this.#setupLogMethod('trace');
 
+  readonly #context: LoggerContext | undefined;
   /**
    * All instances of {@link Bunyamin} must share the same object instance
    */
   readonly #shared: SharedBunyaminConfig;
-  readonly #context?: LoggerContext;
 
-  constructor(sharedConfig: SharedBunyaminConfig, context?: LoggerContext) {
-    this.#shared = sharedConfig as SharedBunyaminConfig;
-    this.#context = context;
+  constructor(shared: SharedBunyaminConfig, context?: LoggerContext) {
+    this.#shared = shared as SharedBunyaminConfig;
+    this.#context = context ?? undefined;
   }
 
-  get bunyan() {
-    return this.#shared.bunyan;
+  get logger() {
+    return this.#shared.logger;
   }
 
-  child(overrides: LoggerContext): Bunyamin {
-    const merged = this._mergeContexts(
-      this.#context ?? {},
-      this.#shared.unsafeMode ? overrides : sanitizeBunyanContext(overrides),
-    );
-    return new Bunyamin(this.#shared, merged);
-  }
-
-  _mergeContexts(...contexts: (LoggerContext | undefined)[]): LoggerContext {
-    const context = Object.assign({}, ...contexts);
-    const categoriesNonUnique = contexts.flatMap((c: LoggerContext | undefined) => {
-      return c && c.cat ? (Array.isArray(c.cat) ? c.cat : String(c.cat).split(',')) : [];
-    });
-    const categories = [...new Set(categoriesNonUnique)].join(',');
-
-    if (context.err) {
-      context.error = context.err;
-      delete context.err;
-    }
-
-    if (categories) {
-      context.cat = categories;
-    } else {
-      delete context.cat;
-    }
-
-    if (context.__filename) {
-      context.__filename = path.basename(context.__filename);
-    }
-
-    context.ph = context.ph || 'i';
-    context.tid = this.#shared.dispatcher.resolve(context.ph, context.cat, context.id || 0);
-
-    return context;
+  child(overrides?: UserLoggerContext): Bunyamin {
+    const childContext = this.#mergeContexts(this.#context, this.#transformContext(overrides));
+    return new Bunyamin(this.#shared, childContext);
   }
 
   #setupLogMethod(level: LogLevel): BunyaminLogMethod {
@@ -82,79 +50,120 @@ export class Bunyamin {
   }
 
   #begin(level: LogLevel, ...arguments_: any[]): void {
-    const { context, msg } = this.#parseArgs({ ph: 'B' }, arguments_);
-    this.#beginInternal(level, context, msg);
+    const entry = this.#resolveLogEntry({ ph: 'B' }, arguments_);
+    this.#beginInternal(level, entry.context, entry.message);
   }
 
-  #beginInternal(level: LogLevel, context: LoggerContext, message: any[]): void {
+  #beginInternal(level: LogLevel, context: ResolvedLoggerContext, message: unknown[]): void {
     this.#shared.messageStack.push(context as any, message);
-    this.#shared.bunyan[level](context, ...message);
+    this.#shared.logger[level](context, ...message);
   }
 
   #end(level: LogLevel, ...arguments_: any[]): void {
-    const { context, msg } = this.#parseArgs({ ph: 'E' }, arguments_);
-    this.#endInternal(level, context, msg);
+    const entry = this.#resolveLogEntry({ ph: 'E' }, arguments_);
+    this.#endInternal(level, entry.context, entry.message);
   }
 
-  #endInternal(level: LogLevel, context: LoggerContext, customMessage: any[]): void {
+  #endInternal(level: LogLevel, context: ResolvedLoggerContext, customMessage: unknown[]): void {
     const beginMessage = this.#shared.messageStack.pop(context as any);
     const message = customMessage.length > 0 ? customMessage : beginMessage;
 
-    this.#shared.bunyan[level](context, ...(message as any[]));
+    this.#shared.logger[level](context, ...(message as unknown[]));
   }
 
   #instant(level: LogLevel, ...arguments_: any[]): void {
-    const { context, msg } = this.#parseArgs(null as any, arguments_);
-    this.#shared.bunyan.logger[level](context, ...msg);
+    const entry = this.#resolveLogEntry(void 0, arguments_);
+    this.#shared.logger[level](entry.context, ...entry.message);
   }
 
-  #complete(level: LogLevel, maybeContext: any, maybeMessage: any, maybeAction: any) {
-    const action = typeof maybeContext === 'string' ? maybeMessage : maybeAction;
+  #complete<T>(
+    level: LogLevel,
+    maybeContext: unknown,
+    maybeMessage: unknown,
+    maybeAction: T | (() => T),
+  ): T {
+    const action = typeof maybeContext === 'string' ? (maybeMessage as T | (() => T)) : maybeAction;
     const arguments_ = maybeAction === action ? [maybeContext, maybeMessage] : [maybeContext];
-    const { context, msg } = this.#parseArgs(null as any, arguments_);
-    const end = (customContext?: LoggerContext) =>
-      this[level].end({
-        id: context.id,
+    const { context, message } = this.#resolveLogEntry({ ph: 'B' }, arguments_);
+
+    return this.#completeInternal(level, context, message, action);
+  }
+
+  #completeInternal<T>(
+    level: LogLevel,
+    context: ResolvedLoggerContext,
+    message: unknown[],
+    action: T | (() => T),
+  ): T {
+    const end = (customContext: EndContext) => {
+      const endContext: ResolvedLoggerContext = {
+        ph: 'E',
         cat: context.cat,
+        tid: context.tid,
         ...customContext,
-      });
+      };
+      this.#endInternal(level, endContext, []);
+    };
 
     let result;
-    this.#beginInternal(level, { ...context, ph: 'B' }, msg);
+    this.#beginInternal(level, { ...context, ph: 'B' }, message);
     try {
-      result = typeof action === 'function' ? action() : action;
+      result = isActionable(action) ? action() : action;
 
       if (isPromiseLike(result)) {
         result.then(
           () => end({ success: true }),
-          (error) => end({ success: false, err: error }),
+          (error) => end({ success: false, error }),
         );
       } else {
         end({ success: true });
       }
 
       return result;
-    } catch (error) {
-      end({ success: false, err: error });
+    } catch (error: unknown) {
+      end({ success: false, error });
       throw error;
     }
   }
 
-  #parseArgs(boundContext: LoggerContext, arguments_: any[]) {
-    const userContext: LoggerContext | undefined = isError(arguments_[0])
-      ? { err: arguments_[0] }
-      : isObject(arguments_[0])
-      ? (arguments_[0] as LoggerContext)
-      : undefined;
+  #resolveLogEntry(boundContext: LoggerContext | undefined, arguments_: unknown[]) {
+    const userContext = isObject(arguments_[0]) ? (arguments_[0] as LoggerContext) : undefined;
 
-    const message = userContext === undefined ? arguments_ : arguments_.slice(1);
+    return {
+      context: this.#mergeContexts(
+        { ...this.#context, ...boundContext },
+        this.#transformContext(userContext),
+      ),
+      message: userContext === undefined ? arguments_ : arguments_.slice(1),
+    };
+  }
 
-    const context = this._mergeContexts(
-      this.#context,
-      boundContext,
-      this.#shared.unsafeMode || !userContext ? userContext : sanitizeBunyanContext(userContext),
-    );
+  #mergeContexts(
+    left: LoggerContext | undefined,
+    right: UserLoggerContext | undefined,
+  ): ResolvedLoggerContext {
+    const { cat: leftCat, tid: leftTid, ph: leftPh, ...leftRest } = left ?? {};
+    const { asyncId, cat: rightCat, tid: rightTid, ph: rightPh, ...rightRest } = right ?? {};
 
-    return { context, msg: message };
+    const ph = rightPh ?? leftPh;
+    const cat = mergeCategories(leftCat, rightCat) || (this.#shared.defaultCategory ?? 'custom');
+    const tid = rightTid ?? leftTid ?? this.#shared.dispatcher.resolve(ph, cat, asyncId);
+
+    return {
+      ...leftRest,
+      ...rightRest,
+      cat,
+      ph,
+      tid,
+    };
+  }
+
+  #transformContext<T extends LoggerContext>(context: T | undefined): T | undefined {
+    return this.#shared.transformContext ? this.#shared.transformContext(context) : context;
   }
 }
+
+type EndContext = {
+  success?: boolean;
+  error?: unknown;
+};

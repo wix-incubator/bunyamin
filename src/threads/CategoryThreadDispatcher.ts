@@ -1,10 +1,28 @@
-import { getMainCategory } from './getMainCategory';
+import { getMainCategory } from './utils';
 import { ThreadDispatcher } from './ThreadDispatcher';
 
 export class CategoryThreadDispatcher {
+  #categoriesCount = 0;
   readonly #dispatchers: Record<string, ThreadDispatcher> = {};
+  readonly #maxConcurrency: number;
 
-  resolve(ph: 'B' | 'E' | 'i', cat: string | string[] | undefined, id: string | number): number {
+  constructor(maxConcurrency: number) {
+    this.#maxConcurrency = maxConcurrency;
+  }
+
+  registerCategories(categories: string[]) {
+    for (const category of categories) {
+      this.#ensureCategoryDispatcher(category);
+    }
+
+    return this;
+  }
+
+  resolve(
+    ph: 'B' | 'E' | 'i' | undefined,
+    cat: string | string[] | undefined,
+    id: unknown,
+  ): number {
     const dispatcher = this.#resolveDispatcher(cat);
 
     switch (ph) {
@@ -21,9 +39,13 @@ export class CategoryThreadDispatcher {
   }
 
   #resolveDispatcher(cat: string[] | string | undefined): ThreadDispatcher {
-    const mainCategory = getMainCategory(cat);
+    return this.#ensureCategoryDispatcher(getMainCategory(cat));
+  }
+
+  #ensureCategoryDispatcher(mainCategory: string): ThreadDispatcher {
     if (!this.#dispatchers[mainCategory]) {
-      this.#dispatchers[mainCategory] = new ThreadDispatcher(mainCategory);
+      const offset = this.#categoriesCount++ * this.#maxConcurrency;
+      this.#dispatchers[mainCategory] = new ThreadDispatcher(mainCategory, offset);
     }
 
     return this.#dispatchers[mainCategory];

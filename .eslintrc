@@ -45,6 +45,7 @@
     "node/no-missing-import": "off",
     "node/no-unsupported-features/es-syntax": "off",
     "@typescript-eslint/member-ordering": "error",
+    "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports" }],
     "unicorn/filename-case": "off",
     "unicorn/import-style": "off",
     "unicorn/no-array-callback-reference": "off",

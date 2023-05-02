@@ -1,4 +1,5 @@
-import { Bunyamin, BunyaminConfig } from './decorator';
+import type { BunyaminConfig } from './decorator';
+import { Bunyamin } from './decorator';
 import { CategoryThreadDispatcher, MessageStack } from './threads';
 
 export function createLogger(options: BunyaminConfig): Bunyamin {

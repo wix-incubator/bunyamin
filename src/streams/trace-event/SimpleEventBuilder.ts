@@ -1,4 +1,5 @@
-import { AbstractEventBuilder, Event } from 'trace-event-lib';
+import type { Event } from 'trace-event-lib';
+import { AbstractEventBuilder } from 'trace-event-lib';
 
 export class SimpleEventBuilder extends AbstractEventBuilder {
   public readonly events: Event[] = [];

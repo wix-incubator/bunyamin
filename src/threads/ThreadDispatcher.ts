@@ -1,36 +1,36 @@
 import { isUndefined } from '../utils';
 
 export class ThreadDispatcher {
-  private readonly stacks: number[] = [];
-  private readonly threads: (string | number)[] = [];
+  readonly #stacks: number[] = [];
+  readonly #threads: unknown[] = [];
 
-  constructor(public readonly name: string) {}
+  constructor(public readonly name: string, public readonly offset: number = 0) {}
 
-  begin(id: string | number): number {
+  begin(id: unknown): number {
     const tid = this.#findTID(id);
-    this.threads[tid] = id;
-    this.stacks[tid] = (this.stacks[tid] || 0) + 1;
-    return tid;
+    this.#threads[tid] = id;
+    this.#stacks[tid] = (this.#stacks[tid] || 0) + 1;
+    return this.offset + tid;
   }
 
-  resolve(id: string | number): number {
-    return this.#findTID(id);
+  resolve(id: unknown): number {
+    return this.offset + this.#findTID(id);
   }
 
-  end(id?: string | number): number {
+  end(id: unknown): number {
     const tid = this.#findTID(id);
-    if (this.stacks[tid] && --this.stacks[tid] === 0) {
-      delete this.threads[tid];
+    if (this.#stacks[tid] && --this.#stacks[tid] === 0) {
+      delete this.#threads[tid];
     }
-    return tid;
+    return this.offset + tid;
   }
 
-  #findTID(id: string | number | undefined): number {
-    let tid = id === undefined ? -1 : this.threads.indexOf(id);
+  #findTID(id: unknown): number {
+    let tid = id === undefined ? -1 : this.#threads.indexOf(id);
     if (tid === -1) {
       // Try to find a recently released slot in the array:
-      tid = this.threads.findIndex(isUndefined);
+      tid = this.#threads.findIndex(isUndefined);
     }
-    return tid === -1 ? this.threads.length : tid;
+    return tid === -1 ? this.#threads.length : tid;
   }
 }

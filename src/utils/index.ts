@@ -1,4 +1,5 @@
 export * from './hasKey';
+export * from './isActionable';
 export * from './isError';
 export * from './isPromiseLike';
 export * from './isObject';

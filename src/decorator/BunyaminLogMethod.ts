@@ -1,4 +1,4 @@
-import { LoggerContext } from './LoggerContext';
+import type { LoggerContext } from './LoggerContext';
 
 export interface BunyaminLogMethod {
   (message: string, context?: LoggerContext): void;
@@ -6,5 +6,6 @@ export interface BunyaminLogMethod {
   begin(message: string, context?: LoggerContext): void;
   end(context?: LoggerContext): void;
   end(message: string, context?: LoggerContext): void;
-  complete(message: string, context?: LoggerContext): void;
+  complete(message: string, action: unknown): void;
+  complete(context: LoggerContext, message: string, action: unknown): void;
 }

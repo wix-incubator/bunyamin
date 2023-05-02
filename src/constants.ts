@@ -1,4 +1,4 @@
-import { BunyanReservedProperty } from './types';
+import type { BunyanReservedProperty } from './types';
 
 export const RESERVED_PROPERTIES = Object.keys({
   hostname: 0,

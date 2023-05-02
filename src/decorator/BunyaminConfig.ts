@@ -1,7 +1,18 @@
+import type { LoggerContext } from './LoggerContext';
+
 export type BunyaminConfig = {
-  bunyan?: any; // BunyanLogger;
+  logger?: any; // BunyanLogger;
   /**
-   * Disables sanitization of user input, used for integration tests.
+   * Predefined categories for this logger. The order of categories affects thread sorting.
    */
-  unsafeMode?: boolean;
+  categories?: string[];
+  /**
+   * @default 'custom'
+   */
+  defaultCategory?: string;
+  /**
+   * @default 100
+   */
+  maxConcurrency?: number;
+  transformContext?: <T extends LoggerContext>(context: T | undefined) => T | undefined;
 };
