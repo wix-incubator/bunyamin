@@ -26,7 +26,7 @@ function transformBunyanRecord(this: TransformerContext, bunyanLogRecord: any) {
     name: processName,
     hostname: _hostname,
     ...otherArguments
-  } = bunyanLogRecord;
+  } = JSON.parse(bunyanLogRecord);
   const ts = new Date(time).getTime() * 1e3;
 
   const builder = new SimpleEventBuilder();
