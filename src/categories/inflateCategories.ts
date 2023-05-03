@@ -7,5 +7,5 @@ export function inflateCategories(cat: unknown): string[] {
     return cat.filter(Boolean) as string[];
   }
 
-  return String(cat).split(',');
+  return String(cat).split(',').filter(Boolean);
 }

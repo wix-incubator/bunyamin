@@ -1,5 +1,5 @@
 import { mergeCategories } from '../categories';
-import { CategoryThreadDispatcher, MessageStack } from '../threads';
+import { ThreadGroupDispatcher, MessageStack } from '../threads';
 import { isActionable, isError, isObject, isPromiseLike } from '../utils';
 import type {
   BunyaminLogMethod,
@@ -31,8 +31,8 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
       this.#fields = undefined;
       this.#shared = {
         ...config,
-        dispatcher: new CategoryThreadDispatcher(config.maxConcurrency ?? 100).registerCategories(
-          config.categories ?? [],
+        dispatcher: new ThreadGroupDispatcher(config.maxConcurrency ?? 100).registerThreadGroups(
+          config.threads ?? [],
         ),
         messageStack: new MessageStack(),
       };
@@ -108,12 +108,11 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
     action: T | (() => T),
   ): T {
     const end = (customContext: EndContext) => {
-      const endContext: ResolvedFields = {
-        ph: 'E',
-        cat: fields.cat,
-        tid: fields.tid,
+      const endContext = {
         ...customContext,
-      };
+        ph: 'E',
+        tid: fields.tid,
+      } as ResolvedFields;
 
       this.#endInternal(level, endContext, []);
     };
@@ -126,7 +125,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
       if (isPromiseLike(result)) {
         result.then(
           () => end({ success: true }),
-          (error) => end({ success: false, error }),
+          (error) => end({ success: false, err: error }),
         );
       } else {
         end({ success: true });
@@ -134,7 +133,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
 
       return result;
     } catch (error: unknown) {
-      end({ success: false, error });
+      end({ success: false, err: error });
       throw error;
     }
   }
@@ -142,10 +141,16 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
   #resolveLogEntry(phase: MaybePhase, arguments_: unknown[]) {
     const userContext = isObject(arguments_[0]) ? (arguments_[0] as MaybeUserFields) : undefined;
     const fields = this.#mergeFields(this.#fields, this.#transformContext(userContext));
+    const message =
+      userContext === undefined
+        ? arguments_
+        : isError(arguments_[0]) && arguments_.length === 1
+        ? [arguments_[0].message]
+        : arguments_.slice(1);
 
     return {
-      fields: this.#resolveFields(fields, phase),
-      message: userContext === undefined ? arguments_ : arguments_.slice(1),
+      fields: this.#resolveThread(fields, phase),
+      message,
     };
   }
 
@@ -153,48 +158,48 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
     left: PredefinedFields | undefined,
     right: UserFields | undefined,
   ): PredefinedFields {
-    return {
+    const result = {
       ...left,
       ...right,
-      cat: mergeCategories(left?.cat, right?.cat),
     };
+
+    const cat = mergeCategories(left?.cat, right?.cat);
+    if (result.cat !== cat) {
+      result.cat = cat;
+    }
+
+    return result;
   }
 
   #transformContext(maybeError: UserFields | Error | undefined): UserFields | undefined {
     const fields: UserFields | undefined = isError(maybeError) ? { err: maybeError } : maybeError;
+    if (fields?.ph) {
+      delete fields.ph;
+    }
+
     return this.#shared.transformFields ? this.#shared.transformFields(fields) : fields;
   }
 
-  #resolveFields(fields: PredefinedFields, ph: MaybePhase): ResolvedFields {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { asyncId, cat: _cat, tid: _tid, ph: _ph, ...contextRest } = fields;
-
-    const cat = _cat ?? this.#shared.defaultCategory ?? 'custom';
-    const tid: number =
-      (_tid as number | undefined) ?? this.#shared.dispatcher.resolve(ph, cat, asyncId);
-
-    contextRest.ph;
-    return {
-      ...contextRest,
-      cat,
-      ph,
-      tid,
-    };
+  #resolveThread(fields: PredefinedFields, ph: MaybePhase): ResolvedFields {
+    const result: ResolvedFields = fields as ResolvedFields;
+    if (ph !== undefined) {
+      result.ph = ph as never;
+    }
+    result.tid = this.#shared.dispatcher.resolve(ph, fields.tid);
+    return result;
   }
 }
 
 type EndContext = {
   success?: boolean;
-  error?: unknown;
+  err?: unknown;
 };
 
 type MaybePhase = 'B' | 'E' | undefined;
 
 type MaybeUserFields = UserFields | Error;
 
-type PredefinedFields = Omit<UserFields, 'asyncId'> & {
-  cat?: string;
-};
+type PredefinedFields = UserFields;
 
 type ResolvedFields = PredefinedFields & {
   ph?: 'B' | 'E';
@@ -202,6 +207,6 @@ type ResolvedFields = PredefinedFields & {
 };
 
 type SharedBunyaminConfig<Logger extends BunyanLikeLogger> = BunyaminConfig<Logger> & {
-  dispatcher: CategoryThreadDispatcher;
+  dispatcher: ThreadGroupDispatcher;
   messageStack: MessageStack;
 };

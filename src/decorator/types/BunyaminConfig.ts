@@ -7,17 +7,17 @@ export type BunyaminConfig<Logger extends BunyanLikeLogger> = {
    */
   logger: Logger;
   /**
-   * Predefined categories for this logger. The order of categories affects thread sorting.
+   * Predefined order of thread aliases.
+   * Cosmetic feature to help resolving thread IDs in a desired order.
    */
-  categories?: string[];
+  threads?: string[];
   /**
-   * @default 'custom'
-   */
-  defaultCategory?: string;
-  /**
-   * Maximum number of thread IDs allocated to each main category.
+   * Maximum number of thread IDs allocated to each thread alias.
    * @default 100
    */
   maxConcurrency?: number;
+  /**
+   * Optional transformation of log record fields provided by the user.
+   */
   transformFields?: <T extends BunyaminLogRecordFields>(context: T | undefined) => T | undefined;
 };

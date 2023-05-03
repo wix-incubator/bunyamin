@@ -1,4 +1,3 @@
-import { getMainCategory } from '../../categories';
 import { flatMapTransform } from '../flatMapTransform';
 import { ThreadResolver } from './ThreadResolver';
 import { SimpleEventBuilder } from './SimpleEventBuilder';
@@ -59,7 +58,7 @@ function transformBunyanRecord(this: TransformerContext, bunyanLogRecord: any) {
   }
 
   if (!this.knownTids.has(tid)) {
-    const mainCategory = getMainCategory(cat);
+    const mainCategory = cat; // TODO: switch to tid
     builder.metadata({ pid, tid, ts, name: 'thread_name', args: { name: mainCategory } });
     builder.metadata({ pid, tid, ts, name: 'thread_sort_index', args: { sort_index: tid } });
     this.knownTids.add(tid);

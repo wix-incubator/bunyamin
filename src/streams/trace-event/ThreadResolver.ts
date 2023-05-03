@@ -1,5 +1,3 @@
-import { getMainCategory } from '../../categories';
-
 export class ThreadResolver {
   static readonly ERROR_TID = 37_707;
 
@@ -45,7 +43,7 @@ export class ThreadResolver {
     return tid === undefined ? ThreadResolver.ERROR_TID : tid;
   }
 
-  _computeThreadHash({ pid, tid, cat }: any): string {
-    return `${pid}:${getMainCategory(cat)}:${tid}`;
+  _computeThreadHash({ pid, tid }: any): string {
+    return `${pid}:${tid}`;
   }
 }

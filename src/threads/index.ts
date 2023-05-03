@@ -1,3 +1,3 @@
-export * from './CategoryThreadDispatcher';
+export * from './ThreadGroupDispatcher';
 export * from './MessageStack';
 export * from './ThreadDispatcher';

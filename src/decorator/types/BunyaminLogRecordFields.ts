@@ -2,19 +2,30 @@ export type BunyaminLogRecordFields = {
   [customProperty: string]: unknown;
 
   /**
+   * Manual override for Process ID.
+   * Not recommended for use.
+   */
+  pid?: number;
+
+  /**
+   * Thread ID.
+   * Since JavaScript is normally single-threaded, this concept is rather
+   * a pseudo-thread, used to track asynchronous operations in the log.
+   * Use {@link ThreadID} when you want to manually specify the Thread ID.
+   * Use {@link ThreadAlias} when you want to automatically allocate the Thread ID.
+   * If your pseudo-thread has concurrency, use complex thread aliases to avoid
+   * misattribution of begin/end events.
+   * @example 123
+   * @example 'child_process'
+   * @example ['child_process', cpid]
+   */
+  tid?: number | ThreadAlias;
+
+  /**
    * Event categories (tags) to facilitate filtering.
-   * The first category is the main category.
-   * Events within the same main category get attached to the same thread.
-   * @default 'custom'
-   * @example 'category1,category2'
-   * @example ['category1', 'category2']
    */
   cat?: string | string[];
-  /**
-   * Hint for resolving Thread ID when there's a risk of logging several parallel duration events
-   * within the same main category.
-   */
-  asyncId?: unknown;
+
   /**
    * Color name (applicable in Google Chrome Trace Format)
    */
@@ -22,18 +33,11 @@ export type BunyaminLogRecordFields = {
 
   /**
    * @deprecated Cannot manually override Event Phase per Google Chrome Trace Format.
+   * Use bunyamin[level].begin(...), bunyamin[level].end(...) or bunyamin[level].complete(...)
+   * instead.
    */
   ph?: never;
-  /**
-   * Manual override for Process ID.
-   * @deprecated Not recommended for use.
-   */
-  pid?: number;
-  /**
-   * Manual override for Thread ID.
-   * @deprecated Not recommended for use.
-   */
-  tid?: number;
+
   /**
    * Manual override for timestamp.
    * The value should be either:
@@ -45,3 +49,6 @@ export type BunyaminLogRecordFields = {
    */
   time?: string;
 };
+
+export type ThreadID = number;
+export type ThreadAlias = string | [string, unknown];
