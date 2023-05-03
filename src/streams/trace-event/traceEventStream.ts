@@ -1,4 +1,4 @@
-import { getMainCategory } from '../../threads';
+import { getMainCategory } from '../../categories';
 import { flatMapTransform } from '../flatMapTransform';
 import { ThreadResolver } from './ThreadResolver';
 import { SimpleEventBuilder } from './SimpleEventBuilder';

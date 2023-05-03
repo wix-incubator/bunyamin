@@ -1,12 +1,9 @@
-import type { BunyaminConfig } from './decorator';
+import type { LoggerOptions } from 'bunyan';
+import { createLogger as createBunyanLogger } from 'bunyan';
 import { Bunyamin } from './decorator';
-import { CategoryThreadDispatcher, MessageStack } from './threads';
 
-export function createLogger(options: BunyaminConfig): Bunyamin {
+export function createLogger(options: LoggerOptions) {
   return new Bunyamin({
-    ...options,
-
-    dispatcher: new CategoryThreadDispatcher(),
-    messageStack: new MessageStack(),
+    logger: createBunyanLogger(options),
   });
 }

@@ -1,0 +1,9 @@
+{
+  "name": "bunyamin-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "bunyamin": "latest",
+    "typescript": "^4.0.0"
+  }
+}

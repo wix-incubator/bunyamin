@@ -1,4 +1,4 @@
-import { getMainCategory } from './utils';
+import { getMainCategory } from '../categories';
 import { ThreadDispatcher } from './ThreadDispatcher';
 
 export class CategoryThreadDispatcher {
@@ -10,7 +10,7 @@ export class CategoryThreadDispatcher {
     this.#maxConcurrency = maxConcurrency;
   }
 
-  registerCategories(categories: string[]) {
+  registerCategories(categories: string[]): this {
     for (const category of categories) {
       this.#ensureCategoryDispatcher(category);
     }

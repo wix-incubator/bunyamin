@@ -1,2 +1,2 @@
-export { Bunyamin } from './Bunyamin';
-export { BunyaminConfig } from './BunyaminConfig';
+export * from './Bunyamin';
+export * from './types';

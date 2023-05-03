@@ -1,10 +1,10 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { Bunyamin } from './Bunyamin';
-import { CategoryThreadDispatcher, MessageStack } from '../threads';
 
 describe('Bunyamin', () => {
   it('should wrap the provided logger', () => {
     const logger = {
+      fatal: jest.fn(),
       trace: jest.fn(),
       debug: jest.fn(),
       info: jest.fn(),
@@ -14,11 +14,8 @@ describe('Bunyamin', () => {
 
     const bunyamin = new Bunyamin({
       logger,
-      dispatcher: new CategoryThreadDispatcher(100).registerCategories([
-        'lifecycle',
-        'child_process',
-      ]),
-      messageStack: new MessageStack(),
+      maxConcurrency: 100,
+      categories: ['lifecycle', 'child_process'],
     });
 
     bunyamin.trace('trace');

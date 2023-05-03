@@ -17,6 +17,7 @@
   "ignorePatterns": [
     "coverage",
     "dist",
+    "e2e",
     "scripts",
     "website",
     "*rc.js",

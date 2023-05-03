@@ -1,4 +1,4 @@
-import { getMainCategory } from '../../threads';
+import { getMainCategory } from '../../categories';
 
 export class ThreadResolver {
   static readonly ERROR_TID = 37_707;
