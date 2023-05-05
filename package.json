@@ -21,7 +21,7 @@
   "engines": {
     "node": ">=14.18.2"
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.umd.js",
   "typings": "./dist/index.d.ts",
   "files": [
     "src",
@@ -34,8 +34,7 @@
   "scripts": {
     "prepare": "husky install",
     "clean": "git clean -xdf",
-    "build": "tsc",
-    "bundle": "microbundle src/index.ts --target node --format esm,umd",
+    "build": "microbundle src/index.ts --target node --format esm,umd",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:staged": "lint-staged",

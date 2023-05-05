@@ -1,5 +1,4 @@
 import { mergeCategories } from '../categories';
-import { ThreadGroupDispatcher, MessageStack } from '../threads';
 import { isActionable, isError, isObject, isPromiseLike } from '../utils';
 import type {
   BunyaminLogMethod,
@@ -7,7 +6,9 @@ import type {
   BunyaminLogRecordFields as UserFields,
   BunyanLikeLogger,
   BunyanLogLevel,
+  ThreadID,
 } from './types';
+import { MessageStack } from './message-stack';
 
 export class Bunyamin<Logger extends BunyanLikeLogger> {
   public readonly fatal = this.#setupLogMethod('fatal');
@@ -31,10 +32,9 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
       this.#fields = undefined;
       this.#shared = {
         ...config,
-        dispatcher: new ThreadGroupDispatcher(config.maxConcurrency ?? 100).registerThreadGroups(
-          config.threads ?? [],
-        ),
-        messageStack: new MessageStack(),
+        messageStack: new MessageStack({
+          noBeginMessage: config.noBeginMessage,
+        }),
       };
     } else {
       this.#fields = fields as PredefinedFields;
@@ -67,7 +67,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
   }
 
   #beginInternal(level: BunyanLogLevel, fields: ResolvedFields, message: unknown[]): void {
-    this.#shared.messageStack.push(fields, message);
+    this.#shared.messageStack.push(fields.tid, message);
     this.#shared.logger[level](fields, ...message);
   }
 
@@ -77,7 +77,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
   }
 
   #endInternal(level: BunyanLogLevel, fields: ResolvedFields, customMessage: unknown[]): void {
-    const beginMessage = this.#shared.messageStack.pop(fields);
+    const beginMessage = this.#shared.messageStack.pop(fields.tid);
     const message = customMessage.length > 0 ? customMessage : beginMessage;
 
     this.#shared.logger[level](fields, ...(message as unknown[]));
@@ -141,7 +141,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
   #resolveLogEntry(phase: MaybePhase, arguments_: unknown[]) {
     const userContext = isObject(arguments_[0]) ? (arguments_[0] as MaybeUserFields) : undefined;
     const fields = this.#mergeFields(this.#fields, this.#transformContext(userContext));
-    const message =
+    const message: unknown[] =
       userContext === undefined
         ? arguments_
         : isError(arguments_[0]) && arguments_.length === 1
@@ -173,10 +173,6 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
 
   #transformContext(maybeError: UserFields | Error | undefined): UserFields | undefined {
     const fields: UserFields | undefined = isError(maybeError) ? { err: maybeError } : maybeError;
-    if (fields?.ph) {
-      delete fields.ph;
-    }
-
     return this.#shared.transformFields ? this.#shared.transformFields(fields) : fields;
   }
 
@@ -185,7 +181,6 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
     if (ph !== undefined) {
       result.ph = ph as never;
     }
-    result.tid = this.#shared.dispatcher.resolve(ph, fields.tid);
     return result;
   }
 }
@@ -203,10 +198,9 @@ type PredefinedFields = UserFields;
 
 type ResolvedFields = PredefinedFields & {
   ph?: 'B' | 'E';
-  tid: number;
+  tid?: ThreadID;
 };
 
 type SharedBunyaminConfig<Logger extends BunyanLikeLogger> = BunyaminConfig<Logger> & {
-  dispatcher: ThreadGroupDispatcher;
   messageStack: MessageStack;
 };

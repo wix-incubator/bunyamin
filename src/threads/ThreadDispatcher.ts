@@ -4,17 +4,23 @@ export class ThreadDispatcher {
   readonly #stacks: number[] = [];
   readonly #threads: unknown[] = [];
 
-  constructor(public readonly name: string, public readonly offset: number = 0) {}
+  constructor(
+    public readonly name: string,
+    public readonly strict: boolean,
+    public readonly min: number,
+    public readonly max: number,
+  ) {}
 
   begin(id: unknown): number {
     const tid = this.#findTID(id);
     this.#threads[tid] = id;
     this.#stacks[tid] = (this.#stacks[tid] || 0) + 1;
-    return this.offset + tid;
+
+    return this.#transposeTID(tid);
   }
 
   resolve(id: unknown): number {
-    return this.offset + this.#findTID(id);
+    return this.#transposeTID(this.#findTID(id));
   }
 
   end(id: unknown): number {
@@ -22,7 +28,8 @@ export class ThreadDispatcher {
     if (this.#stacks[tid] && --this.#stacks[tid] === 0) {
       delete this.#threads[tid];
     }
-    return this.offset + tid;
+
+    return this.#transposeTID(tid);
   }
 
   #findTID(id: unknown): number {
@@ -32,5 +39,18 @@ export class ThreadDispatcher {
       tid = this.#threads.findIndex(isUndefined);
     }
     return tid === -1 ? this.#threads.length : tid;
+  }
+
+  #transposeTID(tid: number): number {
+    const result = this.min + tid;
+    if (result > this.max) {
+      if (this.strict) {
+        throw new Error(`Exceeded limit ${this.max} of concurrent threads in group "${this.name}"`);
+      } else {
+        return this.max;
+      }
+    }
+
+    return result;
   }
 }

@@ -7,15 +7,11 @@ export type BunyaminConfig<Logger extends BunyanLikeLogger> = {
    */
   logger: Logger;
   /**
-   * Predefined order of thread aliases.
-   * Cosmetic feature to help resolving thread IDs in a desired order.
+   * Fallback message to be used when there was no previous message
+   * passed with {@link BunyaminLogMethod#begin}.
+   * @default '<no begin message>'
    */
-  threads?: string[];
-  /**
-   * Maximum number of thread IDs allocated to each thread alias.
-   * @default 100
-   */
-  maxConcurrency?: number;
+  noBeginMessage?: string | unknown;
   /**
    * Optional transformation of log record fields provided by the user.
    */

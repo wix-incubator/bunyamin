@@ -1,25 +1,41 @@
+import type { ThreadAlias, ThreadID } from '../decorator';
 import { ThreadDispatcher } from './ThreadDispatcher';
-import type { ThreadAlias } from '../decorator';
+import type { ThreadGroupConfig } from './ThreadGroupConfig';
 
 export class ThreadGroupDispatcher {
-  #categoriesCount = 0;
+  readonly #strict: boolean;
   readonly #dispatchers: Record<string, ThreadDispatcher> = {};
   readonly #maxConcurrency: number;
 
-  constructor(maxConcurrency: number) {
+  #freeThreadId = 1;
+
+  constructor(strict: boolean, maxConcurrency: number) {
+    this.#strict = strict;
     this.#maxConcurrency = maxConcurrency;
-    this.#ensureGroupDispatcher('undefined');
   }
 
-  registerThreadGroups(threadGroups: string[]): this {
-    for (const threadGroup of threadGroups) {
-      this.#ensureGroupDispatcher(threadGroup);
-    }
+  registerThreadGroup(config: ThreadGroupConfig): this {
+    const maxConcurrency = config.maxConcurrency ?? this.#maxConcurrency;
+    const min = this.#freeThreadId;
+    const max = min + maxConcurrency - 1;
+
+    this.#dispatchers[config.id] = new ThreadDispatcher(config.displayName, this.#strict, min, max);
+    this.#freeThreadId = max + 1;
 
     return this;
   }
 
-  resolve(ph: 'B' | 'E' | 'i' | undefined, tid: number | ThreadAlias | undefined): number {
+  name(tid: number): string {
+    // TODO: implement via https://github.com/alexbol99/flatten-interval-tree
+    // or similar alternative.
+    return `thread (${tid})`;
+  }
+
+  resolve(ph: string | undefined, tid: ThreadID | undefined): number {
+    if (tid != null) {
+      return 0;
+    }
+
     if (typeof tid === 'number') {
       return tid;
     }
@@ -53,8 +69,7 @@ export class ThreadGroupDispatcher {
 
   #ensureGroupDispatcher(threadGroup: string): ThreadDispatcher {
     if (!this.#dispatchers[threadGroup]) {
-      const offset = this.#categoriesCount++ * this.#maxConcurrency;
-      this.#dispatchers[threadGroup] = new ThreadDispatcher(threadGroup, offset);
+      this.registerThreadGroup({ id: threadGroup, displayName: threadGroup });
     }
 
     return this.#dispatchers[threadGroup];

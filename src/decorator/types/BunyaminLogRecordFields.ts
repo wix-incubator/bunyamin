@@ -11,7 +11,7 @@ export type BunyaminLogRecordFields = {
    * Thread ID.
    * Since JavaScript is normally single-threaded, this concept is rather
    * a pseudo-thread, used to track asynchronous operations in the log.
-   * Use {@link ThreadID} when you want to manually specify the Thread ID.
+   * Use {@link ExplicitThreadID} when you want to manually specify the Thread ID.
    * Use {@link ThreadAlias} when you want to automatically allocate the Thread ID.
    * If your pseudo-thread has concurrency, use complex thread aliases to avoid
    * misattribution of begin/end events.
@@ -50,5 +50,8 @@ export type BunyaminLogRecordFields = {
   time?: string;
 };
 
-export type ThreadID = number;
-export type ThreadAlias = string | [string, unknown];
+export type ThreadID = ExplicitThreadID | ThreadAlias;
+export type ExplicitThreadID = number;
+export type ThreadAlias = SimpleThreadAlias | ComplexThreadAlias;
+export type SimpleThreadAlias = string;
+export type ComplexThreadAlias = [string, unknown];
