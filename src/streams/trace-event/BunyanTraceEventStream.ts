@@ -8,6 +8,10 @@ import { bunyan2trace } from './bunyan2trace';
 import { StreamEventBuilder } from './StreamEventBuilder';
 import type { TraceEventStreamOptions } from './TraceEventStreamOptions';
 
+// TODO: extract validation logic to a separate module
+// TODO: normalize options in a separate module
+// TODO: add tests
+
 export class BunyanTraceEventStream extends Transform {
   readonly #knownTids = new Set<number>();
   readonly #threadGroupDispatcher: ThreadGroupDispatcher;
