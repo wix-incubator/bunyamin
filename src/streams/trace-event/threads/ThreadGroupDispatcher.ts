@@ -1,4 +1,6 @@
-import type { ThreadAlias, ThreadID } from '../decorator';
+import IntervalTree from '@flatten-js/interval-tree';
+
+import type { ThreadAlias, ThreadID } from '../../../types';
 import { ThreadDispatcher } from './ThreadDispatcher';
 import type { ThreadGroupConfig } from './ThreadGroupConfig';
 
@@ -6,6 +8,7 @@ export class ThreadGroupDispatcher {
   readonly #strict: boolean;
   readonly #dispatchers: Record<string, ThreadDispatcher> = {};
   readonly #maxConcurrency: number;
+  readonly #names: IntervalTree = new IntervalTree();
 
   #freeThreadId = 1;
 
@@ -20,19 +23,18 @@ export class ThreadGroupDispatcher {
     const max = min + maxConcurrency - 1;
 
     this.#dispatchers[config.id] = new ThreadDispatcher(config.displayName, this.#strict, min, max);
+    this.#names.insert([min, max], config.displayName);
     this.#freeThreadId = max + 1;
 
     return this;
   }
 
-  name(tid: number): string {
-    // TODO: implement via https://github.com/alexbol99/flatten-interval-tree
-    // or similar alternative.
-    return `thread (${tid})`;
+  name(tid: number): string | undefined {
+    return this.#names.search([tid, tid])[0];
   }
 
-  resolve(ph: string | undefined, tid: ThreadID | undefined): number {
-    if (tid != null) {
+  resolve(ph: string | undefined, tid: ThreadID | undefined): number | Error {
+    if (tid == null) {
       return 0;
     }
 
@@ -40,7 +42,7 @@ export class ThreadGroupDispatcher {
       return tid;
     }
 
-    const dispatcher = this.#resolveDispatcher(tid);
+    const dispatcher = this.#resolveDispatcher(tid as ThreadAlias);
     const id = this.#resolveId(tid);
 
     switch (ph) {
@@ -56,7 +58,7 @@ export class ThreadGroupDispatcher {
     }
   }
 
-  #resolveDispatcher(threadAlias: ThreadAlias = 'undefined'): ThreadDispatcher {
+  #resolveDispatcher(threadAlias: ThreadAlias): ThreadDispatcher {
     const groupName = typeof threadAlias === 'string' ? threadAlias : threadAlias[0];
     return this.#ensureGroupDispatcher(groupName);
   }

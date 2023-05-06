@@ -1,12 +1,12 @@
-import { mergeCategories } from '../categories';
+import { deflateCategories, mergeCategories } from './categories';
 import { isActionable, isError, isObject, isPromiseLike } from '../utils';
+import type { ThreadID } from '../types';
 import type {
   BunyaminLogMethod,
   BunyaminConfig,
   BunyaminLogRecordFields as UserFields,
   BunyanLikeLogger,
   BunyanLogLevel,
-  ThreadID,
 } from './types';
 import { MessageStack } from './message-stack';
 
@@ -149,7 +149,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
         : arguments_.slice(1);
 
     return {
-      fields: this.#resolveThread(fields, phase),
+      fields: this.#resolveFields(fields, phase),
       message,
     };
   }
@@ -168,7 +168,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
       result.cat = cat;
     }
 
-    return result;
+    return result as PredefinedFields;
   }
 
   #transformContext(maybeError: UserFields | Error | undefined): UserFields | undefined {
@@ -176,10 +176,13 @@ export class Bunyamin<Logger extends BunyanLikeLogger> {
     return this.#shared.transformFields ? this.#shared.transformFields(fields) : fields;
   }
 
-  #resolveThread(fields: PredefinedFields, ph: MaybePhase): ResolvedFields {
+  #resolveFields(fields: PredefinedFields, ph: MaybePhase): ResolvedFields {
     const result: ResolvedFields = fields as ResolvedFields;
     if (ph !== undefined) {
       result.ph = ph as never;
+    }
+    if (result.cat !== undefined) {
+      result.cat = deflateCategories(result.cat);
     }
     return result;
   }
@@ -194,9 +197,12 @@ type MaybePhase = 'B' | 'E' | undefined;
 
 type MaybeUserFields = UserFields | Error;
 
-type PredefinedFields = UserFields;
+type PredefinedFields = UserFields & {
+  cat?: string[];
+};
 
-type ResolvedFields = PredefinedFields & {
+type ResolvedFields = UserFields & {
+  cat?: string;
   ph?: 'B' | 'E';
   tid?: ThreadID;
 };

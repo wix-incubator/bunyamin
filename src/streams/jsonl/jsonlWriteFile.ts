@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { Writable } from 'stream';
+import fs from 'node:fs';
+import { Writable } from 'node:stream';
 
 export function jsonlWriteFile(filePath: string): Writable {
   return new JSONLFileStream({ filePath });
@@ -39,7 +39,7 @@ class JSONLFileStream extends Writable {
     });
   }
 
-  _write(chunk: unknown, _: any, callback: ErrorCallback) {
+  _write(chunk: unknown, _: unknown, callback: ErrorCallback) {
     const content =
       this._counter++ > 0 ? `,\n${JSON.stringify(chunk)}]\n` : `${JSON.stringify(chunk)}]\n`;
     const buffer = Buffer.from(content);
@@ -50,7 +50,7 @@ class JSONLFileStream extends Writable {
       0,
       buffer.length,
       this._offset,
-      (error, bytesWritten) => {
+      (error: Error | null, bytesWritten: number) => {
         if (error) {
           callback(error);
         } else {

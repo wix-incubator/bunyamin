@@ -1,4 +1,4 @@
-import { isUndefined } from '../utils';
+import { isUndefined } from '../../../utils';
 
 export class ThreadDispatcher {
   readonly #stacks: number[] = [];
@@ -11,7 +11,7 @@ export class ThreadDispatcher {
     public readonly max: number,
   ) {}
 
-  begin(id: unknown): number {
+  begin(id: unknown): number | Error {
     const tid = this.#findTID(id);
     this.#threads[tid] = id;
     this.#stacks[tid] = (this.#stacks[tid] || 0) + 1;
@@ -19,11 +19,11 @@ export class ThreadDispatcher {
     return this.#transposeTID(tid);
   }
 
-  resolve(id: unknown): number {
+  resolve(id: unknown): number | Error {
     return this.#transposeTID(this.#findTID(id));
   }
 
-  end(id: unknown): number {
+  end(id: unknown): number | Error {
     const tid = this.#findTID(id);
     if (this.#stacks[tid] && --this.#stacks[tid] === 0) {
       delete this.#threads[tid];
@@ -41,14 +41,12 @@ export class ThreadDispatcher {
     return tid === -1 ? this.#threads.length : tid;
   }
 
-  #transposeTID(tid: number): number {
+  #transposeTID(tid: number): number | Error {
     const result = this.min + tid;
     if (result > this.max) {
-      if (this.strict) {
-        throw new Error(`Exceeded limit ${this.max} of concurrent threads in group "${this.name}"`);
-      } else {
-        return this.max;
-      }
+      return this.strict
+        ? new Error(`Exceeded limit ${this.max} of concurrent threads in group "${this.name}"`)
+        : this.max;
     }
 
     return result;

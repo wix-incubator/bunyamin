@@ -21,7 +21,8 @@
   "engines": {
     "node": ">=14.18.2"
   },
-  "main": "./dist/index.umd.js",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
   "typings": "./dist/index.d.ts",
   "files": [
     "src",
@@ -34,7 +35,7 @@
   "scripts": {
     "prepare": "husky install",
     "clean": "git clean -xdf",
-    "build": "microbundle src/index.ts --target node --format esm,umd",
+    "build": "microbundle src/index.ts --target node --format cjs,es",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:staged": "lint-staged",
@@ -48,6 +49,7 @@
     "@types/stream-json": "^1.7.3",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
     "@typescript-eslint/parser": "^5.29.0",
+    "bunyan": "^1.8.15",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.39.0",
     "eslint-config-prettier": "^8.8.0",
@@ -70,9 +72,9 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@flatten-js/interval-tree": "^1.0.20",
     "stream-json": "^1.7.5",
-    "trace-event-lib": "^1.3.1",
-    "tslib": "^2.5.0"
+    "trace-event-lib": "^1.3.1"
   },
   "peerDependencies": {
     "bunyan": "^1.8.15",

@@ -1,4 +1,5 @@
-import type { ThreadID } from '../types';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import type { ThreadID } from '../../types';
 
 type Message = unknown[];
 
@@ -14,10 +15,10 @@ export type MessageStackOptions = {
 export class MessageStack {
   readonly #simple = new Map<unknown, Message[]>();
   readonly #complex = new Map<unknown, Map<unknown, Message[]>>();
-  readonly #noBeginMessage: unknown;
+  readonly #noBeginMessage: Message;
 
   constructor(options: MessageStackOptions = {}) {
-    this.#noBeginMessage = options.noBeginMessage ?? '<no begin message>';
+    this.#noBeginMessage = [options.noBeginMessage ?? '<no begin message>'];
   }
 
   push(tid: ThreadID | undefined, message: unknown[]): void {
@@ -27,7 +28,7 @@ export class MessageStack {
 
   pop(tid: ThreadID | undefined): unknown[] {
     const stack = this.#ensureStack(tid);
-    return stack.length === 0 ? [this.#noBeginMessage] : stack.pop()!;
+    return stack.pop() ?? this.#noBeginMessage;
   }
 
   #ensureStack(tid: ThreadID | undefined): Message[] {

@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/switch-case-braces,unicorn/prevent-abbreviations */
+/* eslint-disable unicorn/switch-case-braces,unicorn/prevent-abbreviations,@typescript-eslint/no-explicit-any*/
 import type {
   AsyncEvent,
   CompleteEvent,
@@ -11,7 +11,9 @@ import type {
   MetadataEvent,
 } from 'trace-event-lib';
 
-export function buildTraceEvent(record: any): Event {
+// TODO: optimize args - they will be often empty objects
+
+export function bunyan2trace(record: any): Event {
   if (!record.ph) {
     return buildFallbackEvent(record);
   }
@@ -39,7 +41,7 @@ export function buildTraceEvent(record: any): Event {
 }
 
 function buildAsyncEvent(record: any): AsyncEvent {
-  const event = buildTraceEvent(record) as AsyncEvent;
+  const event = bunyan2trace(record) as AsyncEvent;
   return moveProperties(event.args!, event, ['id', 'id2', 'scope']);
 }
 
@@ -49,7 +51,7 @@ function buildCompleteEvent(record: any): CompleteEvent {
 }
 
 function buildCounterEvent(record: any): CounterEvent {
-  const event = buildTraceEvent(record) as CounterEvent;
+  const event = bunyan2trace(record) as CounterEvent;
   delete event.cat;
   return moveProperties(event.args!, event, ['id']);
 }
@@ -66,7 +68,7 @@ function buildDurationEndEvent(record: any): DurationEndEvent {
 }
 
 function buildMetadataEvent(record: any): MetadataEvent {
-  const event = buildTraceEvent(record) as MetadataEvent;
+  const event = bunyan2trace(record) as MetadataEvent;
   delete event.cat;
   return event;
 }

@@ -1,44 +1,23 @@
-import { Transform } from 'stream';
-import { ThreadGroupDispatcher } from '../../threads';
-import type { ThreadGroupConfig } from '../../threads';
-import { StreamEventBuilder } from './StreamEventBuilder';
-import { buildTraceEvent } from './buildTraceEvent';
+import { Transform } from 'node:stream';
 
-export type BunyanTraceEventStreamOptions = {
-  /**
-   * @default ['v', 'hostname', 'level', 'name']
-   */
-  ignoreFields?: string[];
-  /**
-   * Thread groups allow you to use non-numeric thread IDs (aliases) in your
-   * logs. This is useful when you have multiple asynchronous operations
-   * running in parallel, and you want to group them together in the trace
-   * viewer under the same thread name and keep the thread IDs together.
-   */
-  threadGroups?: (string | ThreadGroupConfig)[];
-  /**
-   * Default maximum number of concurrent threads in each thread group.
-   * Must be a positive integer.
-   * @default 100
-   */
-  maxConcurrency?: number;
-  /**
-   * Strict mode. If enabled, throws an error when a thread group ID (alias)
-   * is out of available thread IDs (see `maxConcurrency`). Otherwise, the
-   * thread ID is resolved to the maximum available thread ID.
-   */
-  strict?: boolean;
-};
+import { isError } from '../../utils';
+
+import { ThreadGroupDispatcher } from './threads';
+import type { ThreadGroupConfig } from './threads';
+import { bunyan2trace } from './bunyan2trace';
+import { StreamEventBuilder } from './StreamEventBuilder';
+import type { TraceEventStreamOptions } from './TraceEventStreamOptions';
 
 export class BunyanTraceEventStream extends Transform {
   readonly #knownTids = new Set<number>();
   readonly #threadGroupDispatcher: ThreadGroupDispatcher;
   readonly #builder = new StreamEventBuilder(this);
   readonly #ignoreFields: string[];
+  readonly #defaultThreadName: string;
 
   #started = false;
 
-  constructor(options: BunyanTraceEventStreamOptions = {}) {
+  constructor(options: TraceEventStreamOptions = {}) {
     super({ objectMode: true });
 
     const maxConcurrency = options.maxConcurrency ?? 100;
@@ -56,6 +35,7 @@ export class BunyanTraceEventStream extends Transform {
     }
 
     this.#ignoreFields = options.ignoreFields ?? ['v', 'hostname', 'level', 'name'];
+    this.#defaultThreadName = options.defaultThreadName ?? 'Main Thread';
     this.#threadGroupDispatcher = new ThreadGroupDispatcher(options.strict ?? true, maxConcurrency);
     for (const [index, threadGroup] of threadGroups.entries()) {
       this.#validateThreadGroup(threadGroup, index);
@@ -63,9 +43,13 @@ export class BunyanTraceEventStream extends Transform {
     }
   }
 
-  _transform(record: any, _encoding: string, callback: (error?: Error | null, data?: any) => void) {
+  _transform(
+    record: unknown,
+    _encoding: string,
+    callback: (error?: Error | null, data?: unknown) => void,
+  ) {
     const json = typeof record === 'string' ? JSON.parse(record) : record;
-    const event = buildTraceEvent(json);
+    const event = json && bunyan2trace(json);
 
     if (event.args) {
       for (const field of this.#ignoreFields) {
@@ -83,13 +67,17 @@ export class BunyanTraceEventStream extends Transform {
       });
     }
 
-    // TODO: validate non-begin/end events
     const tid = (event.tid = this.#threadGroupDispatcher.resolve(event.ph, event.tid));
+    if (isError(tid)) {
+      callback(tid);
+      return;
+    }
 
     if (!this.#knownTids.has(tid)) {
       this.#knownTids.add(tid);
 
-      const threadName = this.#threadGroupDispatcher.name(tid);
+      const threadName =
+        tid === 0 ? this.#defaultThreadName : this.#threadGroupDispatcher.name(tid);
 
       if (threadName) {
         this.#builder.metadata({
@@ -97,12 +85,12 @@ export class BunyanTraceEventStream extends Transform {
           tid: event.tid,
           ts: event.ts,
           name: 'thread_name',
-          args: { name: this.#threadGroupDispatcher.name(event.tid) },
+          args: { name: threadName },
         });
       }
     }
 
-    this.push(event);
+    this.#builder.send(event);
     callback(null);
   }
 

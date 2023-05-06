@@ -4,8 +4,8 @@ export function inflateCategories(cat: unknown): string[] {
   }
 
   if (Array.isArray(cat)) {
-    return cat.filter(Boolean).map(String);
+    return cat;
   }
 
-  return String(cat).split(',').filter(Boolean);
+  return String(cat).split(',');
 }

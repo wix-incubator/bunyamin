@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/no-array-push-push */
 import { describe, expect, test } from '@jest/globals';
 import { MessageStack } from './MessageStack';
-import type { ThreadID } from '../types';
+import type { ThreadID } from '../../types';
 
 describe('MessageStack', () => {
   test.each([

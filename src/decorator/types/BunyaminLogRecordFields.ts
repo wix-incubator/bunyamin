@@ -1,3 +1,5 @@
+import type { ThreadAlias } from '../../types';
+
 export type BunyaminLogRecordFields = {
   [customProperty: string]: unknown;
 
@@ -49,9 +51,3 @@ export type BunyaminLogRecordFields = {
    */
   time?: string;
 };
-
-export type ThreadID = ExplicitThreadID | ThreadAlias;
-export type ExplicitThreadID = number;
-export type ThreadAlias = SimpleThreadAlias | ComplexThreadAlias;
-export type SimpleThreadAlias = string;
-export type ComplexThreadAlias = [string, unknown];
