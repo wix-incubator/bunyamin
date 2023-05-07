@@ -1,2 +1,2 @@
 export * from './TraceEventStreamOptions';
-export * from './traceEventStream';
+export * from './normalizeOptions';

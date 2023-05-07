@@ -6,44 +6,31 @@ import { ThreadGroupDispatcher } from './threads';
 import type { ThreadGroupConfig } from './threads';
 import { bunyan2trace } from './bunyan2trace';
 import { StreamEventBuilder } from './StreamEventBuilder';
-import type { TraceEventStreamOptions } from './TraceEventStreamOptions';
+import type { TraceEventStreamOptions } from './options/TraceEventStreamOptions';
+import { normalizeOptions } from './options/normalizeOptions';
 
-// TODO: extract validation logic to a separate module
-// TODO: normalize options in a separate module
 // TODO: add tests
-
 export class BunyanTraceEventStream extends Transform {
   readonly #knownTids = new Set<number>();
   readonly #threadGroupDispatcher: ThreadGroupDispatcher;
   readonly #builder = new StreamEventBuilder(this);
   readonly #ignoreFields: string[];
-  readonly #defaultThreadName: string;
 
   #started = false;
 
-  constructor(options: TraceEventStreamOptions = {}) {
+  constructor(userOptions: TraceEventStreamOptions = {}) {
     super({ objectMode: true });
 
-    const maxConcurrency = options.maxConcurrency ?? 100;
-    const threadGroups = (options.threadGroups ?? []).map((threadGroup) =>
-      typeof threadGroup === 'string'
-        ? {
-            id: threadGroup,
-            displayName: threadGroup,
-          }
-        : threadGroup,
-    );
-
-    if (maxConcurrency < 1) {
-      throw new Error(`Invalid max concurrency (${maxConcurrency})`);
-    }
-
+    const options = normalizeOptions(userOptions);
     this.#ignoreFields = options.ignoreFields ?? ['v', 'hostname', 'level', 'name'];
-    this.#defaultThreadName = options.defaultThreadName ?? 'Main Thread';
-    this.#threadGroupDispatcher = new ThreadGroupDispatcher(options.strict ?? true, maxConcurrency);
-    for (const [index, threadGroup] of threadGroups.entries()) {
-      this.#validateThreadGroup(threadGroup, index);
-      this.#threadGroupDispatcher.registerThreadGroup(threadGroup);
+    this.#threadGroupDispatcher = new ThreadGroupDispatcher({
+      strict: options.strict ?? false,
+      defaultThreadName: options.defaultThreadName ?? 'Main Thread',
+      maxConcurrency: options.maxConcurrency ?? 100,
+    });
+
+    for (const threadGroup of options.threadGroups) {
+      this.#threadGroupDispatcher.registerThreadGroup(threadGroup as ThreadGroupConfig);
     }
   }
 
@@ -80,9 +67,7 @@ export class BunyanTraceEventStream extends Transform {
     if (!this.#knownTids.has(tid)) {
       this.#knownTids.add(tid);
 
-      const threadName =
-        tid === 0 ? this.#defaultThreadName : this.#threadGroupDispatcher.name(tid);
-
+      const threadName = this.#threadGroupDispatcher.name(tid);
       if (threadName) {
         this.#builder.metadata({
           pid: event.pid,
@@ -96,25 +81,5 @@ export class BunyanTraceEventStream extends Transform {
 
     this.#builder.send(event);
     callback(null);
-  }
-
-  #validateThreadGroup(threadGroup: ThreadGroupConfig, index: number) {
-    if (!threadGroup.id) {
-      throw new Error('Missing thread group ID in thread group at index ' + index);
-    }
-
-    if (threadGroup.maxConcurrency != null) {
-      if (threadGroup.maxConcurrency < 1) {
-        throw new Error(
-          `Max concurrency (${threadGroup.id} -> ${threadGroup.maxConcurrency}) has to be a positive integer`,
-        );
-      }
-
-      if (threadGroup.maxConcurrency > 100_500) {
-        throw new Error(
-          `Max concurrency (${threadGroup.id} -> ${threadGroup.maxConcurrency}) cannot be greater than 100,500`,
-        );
-      }
-    }
   }
 }

@@ -1,4 +1,4 @@
-import type { ThreadGroupConfig } from './threads';
+import type { ThreadGroupConfig } from '../threads';
 
 export type TraceEventStreamOptions = {
   /**

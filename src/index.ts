@@ -1,4 +1,2 @@
-export type * from './decorator';
-export * from './createLogger';
+export * from './traceEventStream';
 export * from './wrapLogger';
-export { traceEventStream } from './streams';

@@ -1,7 +1,6 @@
 import type { Transform } from 'node:stream';
-import { jsonlWriteFile } from '../jsonl';
-import type { TraceEventStreamOptions } from './TraceEventStreamOptions';
-import { BunyanTraceEventStream } from './BunyanTraceEventStream';
+import { BunyanTraceEventStream, jsonlWriteFile } from './streams';
+import type { TraceEventStreamOptions } from './streams';
 
 export function traceEventStream(
   options: TraceEventStreamOptions & { filePath: string },

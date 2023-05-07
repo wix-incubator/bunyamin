@@ -4,17 +4,25 @@ import type { ThreadAlias, ThreadID } from '../../../types';
 import { ThreadDispatcher } from './ThreadDispatcher';
 import type { ThreadGroupConfig } from './ThreadGroupConfig';
 
+export type ThreadGroupDispatcherConfig = {
+  defaultThreadName: string;
+  maxConcurrency: number;
+  strict: boolean;
+};
+
 export class ThreadGroupDispatcher {
   readonly #strict: boolean;
   readonly #dispatchers: Record<string, ThreadDispatcher> = {};
   readonly #maxConcurrency: number;
+  readonly #defaultThreadName: string;
   readonly #names: IntervalTree = new IntervalTree();
 
   #freeThreadId = 1;
 
-  constructor(strict: boolean, maxConcurrency: number) {
-    this.#strict = strict;
-    this.#maxConcurrency = maxConcurrency;
+  constructor(options: ThreadGroupDispatcherConfig) {
+    this.#defaultThreadName = options.defaultThreadName;
+    this.#maxConcurrency = options.maxConcurrency;
+    this.#strict = options.strict;
   }
 
   registerThreadGroup(config: ThreadGroupConfig): this {
@@ -30,6 +38,10 @@ export class ThreadGroupDispatcher {
   }
 
   name(tid: number): string | undefined {
+    if (tid === 0) {
+      return this.#defaultThreadName;
+    }
+
     return this.#names.search([tid, tid])[0];
   }
 
@@ -43,6 +55,10 @@ export class ThreadGroupDispatcher {
     }
 
     const dispatcher = this.#resolveDispatcher(tid as ThreadAlias);
+    if (!dispatcher) {
+      return new Error(`Unknown thread group "${this.#resolveAlias(tid)}"`);
+    }
+
     const id = this.#resolveId(tid);
 
     switch (ph) {
@@ -63,6 +79,10 @@ export class ThreadGroupDispatcher {
     return this.#ensureGroupDispatcher(groupName);
   }
 
+  #resolveAlias(threadAlias: ThreadAlias | undefined): unknown {
+    return Array.isArray(threadAlias) ? threadAlias[0] : threadAlias;
+  }
+
   #resolveId(threadAlias: ThreadAlias | undefined): unknown {
     return threadAlias === undefined || typeof threadAlias === 'string'
       ? undefined
@@ -70,7 +90,7 @@ export class ThreadGroupDispatcher {
   }
 
   #ensureGroupDispatcher(threadGroup: string): ThreadDispatcher {
-    if (!this.#dispatchers[threadGroup]) {
+    if (!this.#dispatchers[threadGroup] && !this.#strict) {
       this.registerThreadGroup({ id: threadGroup, displayName: threadGroup });
     }
 
