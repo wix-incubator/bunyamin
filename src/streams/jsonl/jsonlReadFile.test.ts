@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
-import { readFile, unlink } from 'node:fs/promises';
-import type { Readable } from "node:stream";
+import tempy from 'tempy';
+import { writeFile, unlink } from 'node:fs/promises';
 
 import { describe, beforeEach, afterEach, it, expect } from '@jest/globals';
 
@@ -8,67 +8,30 @@ import { jsonlReadFile } from './jsonlReadFile';
 
 describe('jsonlReadFile', () => {
   let temporaryFilePath: string;
-  let jsonl: Readable;
 
   beforeEach(() => {
-    jsonl = jsonlReadFile(temporaryFilePath);
+    temporaryFilePath = tempy.file();
   });
 
   afterEach(async () => {
-    if (!jsonl.destroyed) {
-      jsonl.destroy();
-    }
-
     if (temporaryFilePath && existsSync(temporaryFilePath)) {
       await unlink(temporaryFilePath);
     }
   });
 
-  it('should serialize 0 objects', async () => {
-    await new Promise<void>((resolve, reject) => {
-      jsonl.end((error: unknown) => (error ? reject(error) : resolve()));
-    });
+  it.each([
+    ['empty array', [], []],
+    ['single-line array', [{ a: 1 }, { b: 2 }, { c: 3 }], []],
+    ['multi-line array', [{ a: 1 }, { b: 2 }, { c: 3 }], [null, 2]],
+  ])('should deserialize %s', async (_comment, value: unknown, options: any[]) => {
+    const json = JSON.stringify(value, ...options);
+    await writeFile(temporaryFilePath, json + '\n');
 
-    expect(await readFile(temporaryFilePath, 'utf8')).toEqual('[]\n');
-  });
+    const chunks: unknown[] = [];
+    for await (const chunk of jsonlReadFile(temporaryFilePath)) {
+      chunks.push(chunk);
+    }
 
-  it('should serialize 1 object', async () => {
-    await new Promise<void>((resolve, reject) => {
-      jsonl.write({ a: 1 });
-      jsonl.end((error: unknown) => (error ? reject(error) : resolve()));
-    });
-
-    expect(await readFile(temporaryFilePath, 'utf8')).toEqual('[{"a":1}]\n');
-  });
-
-  it('should serialize 2 objects', async () => {
-    await new Promise<void>((resolve, reject) => {
-      jsonl.write({ a: 1 });
-      jsonl.write({ b: 2 });
-      jsonl.end((error: unknown) => (error ? reject(error) : resolve()));
-    });
-
-    expect(await readFile(temporaryFilePath, 'utf8')).toEqual('[{"a":1},\n{"b":2}]\n');
-  });
-
-  it('should serialize 3 objects', async () => {
-    await new Promise<void>((resolve, reject) => {
-      jsonl.write({ a: 1 });
-      jsonl.write({ b: 2 });
-      jsonl.write({ c: 3 });
-      jsonl.end((error: unknown) => (error ? reject(error) : resolve()));
-    });
-
-    expect(await readFile(temporaryFilePath, 'utf8')).toEqual('[{"a":1},\n{"b":2},\n{"c":3}]\n');
-  });
-
-  it('should serialize primitives', async () => {
-    await new Promise<void>((resolve, reject) => {
-      jsonl.write(42);
-      jsonl.write('foo');
-      jsonl.end((error: unknown) => (error ? reject(error) : resolve()));
-    });
-
-    expect(await readFile(temporaryFilePath, 'utf8')).toEqual(`[42,\n"foo"]\n`);
+    expect(chunks).toEqual(value);
   });
 });

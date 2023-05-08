@@ -1,1 +1,1 @@
-export const HERE_BE_DRAGONS = '🐉';
+export * from './traceMerge';
