@@ -9,6 +9,7 @@
 - Support for logging duration events, with the ability to stack events and mark them as completed.
 - Aggregation of multi-process logs for advanced use scenarios.
 
+[![npm version](https://badge.fury.io/js/bunyamin.svg)](https://badge.fury.io/js/bunyamin)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
