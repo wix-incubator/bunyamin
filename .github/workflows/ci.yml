@@ -44,7 +44,7 @@ jobs:
       - name: Bundle
         run: npm run build
       - name: Semantic release
-        run: npx --no-install semantic-release --debug
+        run: npx --no-install semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
