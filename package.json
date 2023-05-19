@@ -39,8 +39,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:staged": "lint-staged",
-    "test": "jest",
-    "test:ci": "eslint . && tsc && jest"
+    "test": "jest"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.6.1",

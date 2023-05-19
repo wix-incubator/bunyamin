@@ -37,4 +37,52 @@ describe('traceMerge', () => {
 
     expect(chunks).toEqual([{ ts: 1 }, { ts: 2 }, { ts: 3 }, { ts: 4 }]);
   });
+
+  it('should resolve pid and tid inside events', async () => {
+    const file1 = tempy.file();
+    const file2 = tempy.file();
+    temporaryFilePaths.push(file1, file2);
+    await writeFile(
+      file1,
+      JSON.stringify([
+        { pid: 100, tid: 0, ts: 2 },
+        { pid: 100, tid: 1, ts: 3 },
+      ]),
+    );
+    await writeFile(
+      file2,
+      JSON.stringify([
+        { pid: 200, tid: 0, ts: 1 },
+        { pid: 200, tid: 100, ts: 4 },
+      ]),
+    );
+
+    const chunks: unknown[] = [];
+    for await (const chunk of traceMerge([file1, file2])) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks).toEqual([
+      {
+        pid: 200,
+        tid: 0,
+        ts: 1,
+      },
+      {
+        pid: 100,
+        tid: 101,
+        ts: 2,
+      },
+      {
+        pid: 100,
+        tid: 102,
+        ts: 3,
+      },
+      {
+        pid: 200,
+        tid: 100,
+        ts: 4,
+      },
+    ]);
+  });
 });

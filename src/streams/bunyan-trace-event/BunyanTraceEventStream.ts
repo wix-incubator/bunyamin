@@ -22,7 +22,7 @@ export class BunyanTraceEventStream extends Transform {
     super({ objectMode: true });
 
     const options = normalizeOptions(userOptions);
-    this.#ignoreFields = options.ignoreFields ?? ['v', 'hostname', 'level', 'name'];
+    this.#ignoreFields = options.ignoreFields;
     this.#threadGroupDispatcher = new ThreadGroupDispatcher({
       strict: options.strict ?? false,
       defaultThreadName: options.defaultThreadName ?? 'Main Thread',

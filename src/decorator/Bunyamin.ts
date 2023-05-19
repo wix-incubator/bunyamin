@@ -10,7 +10,7 @@ import type {
 } from './types';
 import { MessageStack } from './message-stack';
 
-export class Bunyamin<Logger extends BunyanLikeLogger> {
+export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
   public readonly fatal = this.#setupLogMethod('fatal');
   public readonly error = this.#setupLogMethod('error');
   public readonly warn = this.#setupLogMethod('warn');

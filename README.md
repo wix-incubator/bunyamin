@@ -32,15 +32,23 @@ Once you have installed the logger, you can import it into your application and 
 normally do with Bunyan:
 
 ```js
-import { createLogger, traceEventStream } from 'bunyamin';
+import { createLogger } from 'bunyan';
+import { wrapLogger, traceEventStream } from 'bunyamin';
 
-const logger = createLogger({
+const bunyan = createLogger({
   name: 'my-app',
   streams: [
-    traceEventStream({ outFile: '/path/to/trace.json', loglevel: 'trace' }),
+    {
+      level: 'trace',
+      stream: traceEventStream({
+        filePath: '/path/to/trace.json',
+        loglevel: 'trace',
+      }),
+    }
   ],
 });
 
+const logger = wrapLogger({ logger: bunyan });
 logger.info('Hello, world!');
 ```
 
@@ -104,22 +112,21 @@ The LogEvent type provides a structure for defining metadata objects:
 
 ```ts
 type LogEvent = {
-  id?: string | number;
   cat?: string | string[];
   cname?: string;
-  pid?: never;
-  tid?: never;
-  ts?: never;
-  ph?: never;
+  pid?: number;
+  tid?: number | string | [string, unknown];
+
   [customProperty: string]: unknown;
 };
 ```
 
-The `id` property can be used to assign an ID to the event, which can be helpful when logging concurrent or overlapping events.
+The `tid` property can be used to assign an explicit thread id to the event or a thread alias,
+which can be helpful when logging concurrent or overlapping events.
 
 ### Child Loggers
 
-You can create a child logger with a specific context by calling the `child` method on the parent logger:
+Similar to Bunyan, you can create a child logger with a specific context by calling the `child` method on the parent logger:
 
 ```js
 const childLogger = logger.child({ component: 'Login' });

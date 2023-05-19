@@ -1,36 +1,44 @@
-import type { Event } from 'trace-event-lib';
-import multiSortStream from 'multi-sort-stream';
-
 import type { Readable } from 'node:stream';
 
 import { jsonlReadFile } from '../jsonl';
-import { Transform } from 'node:stream';
+import type { Resolver } from './resolvers';
+import { FilePIDResolver, PIDResolver } from './resolvers';
+import { multisort, TraceAnalyze, TraceMerge } from './transforms';
 
-export function traceMerge(filePaths: string[]): Readable {
+export type TraceMergeOptions = {
+  mode: 'pid' | 'fpid';
+};
+
+export function traceMerge(filePaths: string[], options?: TraceMergeOptions): Readable {
   const streams = filePaths.map((filePath) => jsonlReadFile(filePath));
-  // eslint-disable-next-line unicorn/consistent-function-scoping
-  return multiSortStream(streams, comparator).pipe(new TraceMerge());
+  const resolver = makeResolver(options);
+  const $resolver = makeDeferred<Resolver>();
+  const analyze = new TraceAnalyze(resolver)
+    .on('error', (error) => $resolver.reject(error))
+    .on('finish', () => $resolver.resolve(resolver));
+
+  const merge = new TraceMerge($resolver.promise);
+
+  const sorted = multisort(streams);
+  sorted.pipe(analyze);
+  return sorted.pipe(merge);
 }
 
-function comparator(a: unknown, b: unknown): number {
-  const aa = a as Event;
-  const bb = b as Event;
-
-  return aa.ts < bb.ts ? -1 : aa.ts > bb.ts ? 1 : 0;
+function makeResolver(options?: TraceMergeOptions): Resolver {
+  return options?.mode === 'fpid' ? new FilePIDResolver() : new PIDResolver();
 }
 
-class TraceMerge extends Transform {
-  constructor() {
-    super({ objectMode: true });
-  }
+function makeDeferred<T>() {
+  let resolve: (value: T) => void;
+  let reject: (reason?: unknown) => void;
+  const promise = new Promise<T>((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
+  });
 
-  _transform(
-    record: unknown,
-    _encoding: string,
-    callback: (error?: Error | null, data?: unknown) => void,
-  ) {
-    // TODO: implement pid and tid resolution
-    this.push(record);
-    callback();
-  }
+  return {
+    promise: promise,
+    resolve: resolve!,
+    reject: reject!,
+  };
 }

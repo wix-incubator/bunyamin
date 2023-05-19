@@ -7,22 +7,30 @@ export function jsonlReadFile(filePath: string): Readable {
   return fs
     .createReadStream(filePath, { encoding: 'utf8' })
     .pipe(StreamArray.withParser())
-    .pipe(new MapValues());
+    .pipe(new MapValues(filePath));
 }
 
 class MapValues extends Transform {
-  constructor() {
+  constructor(protected readonly filePath: string) {
     super({ objectMode: true });
   }
 
   _transform(
-    record: unknown,
+    record: any,
     _encoding: string,
     callback: (error?: Error | null, data?: unknown) => void,
   ) {
-    this.push((record as JsonArrayEntry)?.value);
+    this.push({
+      ...record,
+      filePath: this.filePath,
+    } as JSONLEntry);
+
     callback();
   }
 }
 
-type JsonArrayEntry = { index: number; value: unknown };
+export type JSONLEntry<T = unknown> = {
+  filePath: string;
+  key: number;
+  value: T;
+};

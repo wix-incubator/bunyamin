@@ -23,8 +23,8 @@ describe('jsonlReadFile', () => {
     ['empty array', [], []],
     ['single-line array', [{ a: 1 }, { b: 2 }, { c: 3 }], []],
     ['multi-line array', [{ a: 1 }, { b: 2 }, { c: 3 }], [null, 2]],
-  ])('should deserialize %s', async (_comment, value: unknown, options: any[]) => {
-    const json = JSON.stringify(value, ...options);
+  ])('should deserialize %s', async (_comment, values: unknown[], options: any[]) => {
+    const json = JSON.stringify(values, ...options);
     await writeFile(temporaryFilePath, json + '\n');
 
     const chunks: unknown[] = [];
@@ -32,6 +32,8 @@ describe('jsonlReadFile', () => {
       chunks.push(chunk);
     }
 
-    expect(chunks).toEqual(value);
+    expect(chunks).toEqual(
+      values.map((value, index) => ({ filePath: temporaryFilePath, key: index, value })),
+    );
   });
 });
