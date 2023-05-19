@@ -30,7 +30,8 @@ jobs:
 
   publish:
     name: Publish
-    needs: main
+    needs: test
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -41,7 +42,6 @@ jobs:
         with:
           useLockFile: false
       - name: Semantic release
-        if: github.ref == 'refs/heads/master'
         run: npx --no-install semantic-release --debug
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
