@@ -225,9 +225,9 @@ describe('end-to-end', () => {
     temporaryFilePaths.push(file3);
 
     const json3 = JSON.parse(await readFile(file3, 'utf8')) as Event[];
-    // json3.forEach((record, index) => {
-    // record.ts = index;
-    // });
+    json3.forEach((record, index) => {
+      record.ts = index;
+    });
 
     expect(json3).toMatchInlineSnapshot(`
       [
@@ -239,7 +239,7 @@ describe('end-to-end', () => {
           "ph": "M",
           "pid": 1,
           "tid": 0,
-          "ts": 1684518814772000,
+          "ts": 0,
         },
         {
           "args": {
@@ -249,7 +249,7 @@ describe('end-to-end', () => {
           "ph": "M",
           "pid": 1,
           "tid": 0,
-          "ts": 1684518814772000,
+          "ts": 1,
         },
         {
           "args": {
@@ -259,7 +259,7 @@ describe('end-to-end', () => {
           "ph": "i",
           "pid": 1,
           "tid": 0,
-          "ts": 1684518814772000,
+          "ts": 2,
         },
         {
           "args": {
@@ -269,7 +269,7 @@ describe('end-to-end', () => {
           "ph": "M",
           "pid": 2,
           "tid": 2,
-          "ts": 1684518814773000,
+          "ts": 3,
         },
         {
           "args": {
@@ -279,7 +279,7 @@ describe('end-to-end', () => {
           "ph": "M",
           "pid": 2,
           "tid": 2,
-          "ts": 1684518814773000,
+          "ts": 4,
         },
         {
           "args": {
@@ -289,7 +289,7 @@ describe('end-to-end', () => {
           "ph": "B",
           "pid": 2,
           "tid": 2,
-          "ts": 1684518814773000,
+          "ts": 5,
         },
         {
           "args": {
@@ -299,7 +299,7 @@ describe('end-to-end', () => {
           "ph": "M",
           "pid": 1,
           "tid": 1,
-          "ts": 1684518814785000,
+          "ts": 6,
         },
         {
           "args": {},
@@ -307,7 +307,7 @@ describe('end-to-end', () => {
           "ph": "B",
           "pid": 1,
           "tid": 1,
-          "ts": 1684518814785000,
+          "ts": 7,
         },
         {
           "args": {
@@ -317,7 +317,7 @@ describe('end-to-end', () => {
           "ph": "i",
           "pid": 1,
           "tid": 1,
-          "ts": 1684518814796000,
+          "ts": 8,
         },
         {
           "args": {
@@ -326,7 +326,7 @@ describe('end-to-end', () => {
           "ph": "E",
           "pid": 1,
           "tid": 1,
-          "ts": 1684518814797000,
+          "ts": 9,
         },
         {
           "args": {},
@@ -334,7 +334,7 @@ describe('end-to-end', () => {
           "ph": "i",
           "pid": 1,
           "tid": 0,
-          "ts": 1684518814808000,
+          "ts": 10,
         },
         {
           "args": {
@@ -343,7 +343,7 @@ describe('end-to-end', () => {
           "ph": "E",
           "pid": 2,
           "tid": 2,
-          "ts": 1684518814819000,
+          "ts": 11,
         },
       ]
     `);
