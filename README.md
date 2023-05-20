@@ -116,7 +116,7 @@ await logger.info.complete({ cat: 'login' }, 'Logging in', async () => {
 });
 ```
 
-The `complete` method takes an optional metadata, a message and a function or promise to execute. It logs a `begin` event with the message before executing the function or promise, and a corresponding `end` event when the function or promise completes. Depending on the result of the operation, it might attach a boolean `$success` result and `$error` object.
+The `complete` method takes an optional metadata, a message and a function or promise to execute. It logs a `begin` event with the message before executing the function or promise, and a corresponding `end` event when the function or promise completes. Depending on the result of the operation, it might attach a boolean `success` result and `err` object.
 
 ### Metadata
 
