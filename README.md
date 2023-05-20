@@ -1,32 +1,37 @@
-<table align=center><tr><td rowspan=2 width="355px">
+<p align="center">
+  <a href="https://badge.fury.io/js/bunyamin"><img src="https://badge.fury.io/js/bunyamin.svg" alt="npm version"></a>
+  <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release" alt="semantic-release: angular"></a>
+  <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt="Commitizen friendly"></a>
+</p>
+
+<p align="center">
   <img src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/bunyamin.png" width="317">
-</td><td colspan="2" height="300" valign="top">
+</p>
 
-- Based on top of [node-bunyan](https://github.com/trentm/node-bunyan).
-- Generated logs can be viewed in [Perfetto UI](https://ui.perfetto.dev), `chrome://tracing` and other debugging tools.
-- Multiple log levels, including `fatal`, `error`, `warn`, `info`, `debug`, and `trace`.
-- Customizable metadata for logging events, including event categories and custom properties.
-- Support for logging duration events, with the ability to stack events and mark them as completed.
-- Aggregation of multi-process logs for advanced use scenarios.
+<p align="center">
+  <kbd>
+    <img alt="ui.perfetto.dev example screenshot" src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/perfetto-ui.png" height="162px" />
+  </kbd>
+  <kbd>
+    <img alt="chrome://tracing example screenshot" src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/chrome-trace.png" height="162px" />
+  </kbd>
+</p>
 
-[![npm version](https://badge.fury.io/js/bunyamin.svg)](https://badge.fury.io/js/bunyamin)
-[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+**Bunyamin** is a powerful extension of the `node-bunyan` logger, designed specifically to track and visualize parallel app activities. It can offer valuable insights into the performance and behavior of your Node.js applications. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Bunyamin can be utilized in an extensive range of libraries and programs.
 
-</td></tr><tr><td align="center">
-  <img src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/perfetto-ui.png" height="108px" />
-</td><td align="center">
-  <img src="https://raw.githubusercontent.com/wix-incubator/bunyamin/master/docs/images/chrome-trace.png" height="108px" />
-</td></tr></table>
-
-**Bunyamin** is a powerful logging and event tracking library that provides detailed information on the performance and behavior of your application. Originally developed as part of the [Detox](https://wix.github.io/Detox/) testing framework, Bunyamin can be used in a wide range of Node.js applications and libraries.
+- Built on the foundation of [node-bunyan](https://github.com/trentm/node-bunyan), a highly popular library with 1.5M weekly downloads.
+- Generates logs which can be conveniently viewed in [Perfetto UI](https://ui.perfetto.dev), `chrome://tracing` and other debugging tools.
+- Provides multiple log levels, including `fatal`, `error`, `warn`, `info`, `debug`, and `trace`.
+- Offers attaching customizable metadata for logging events, such as event categories, color names and any custom properties.
+- Supports parallel duration events, with the ability to stack events and mark them as completed.
+- Has the ability to reconcile multiple trace event files, catering to advanced use scenarios.
 
 ## Getting Started
 
 To install the Bunyamin, run the following command:
 
 ```sh
-npm install bunyamin --save
+npm install bunyan bunyamin --save
 ```
 
 Once you have installed the logger, you can import it into your application and start logging events as you would
@@ -50,8 +55,17 @@ const bunyan = createLogger({
 });
 
 const logger = wrapLogger({ logger: bunyan });
-logger.info('Hello, world!');
+const network = logger.child({ cat: 'network' });
+
+logger.info('Starting the app');
+
+const URL = 'https://github.com';
+const res = await network.debug.complete({ method: 'GET' }, URL, fetch(URL));
 ```
+
+Here's how the trace file would look like when visualized in [Perfetto](https://ui.perfetto.dev):
+
+![](https://github.com/wix-incubator/bunyamin/assets/1962469/61f728a2-1762-489b-8e46-fdf1e0b9e006)
 
 ## API
 
