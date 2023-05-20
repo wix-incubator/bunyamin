@@ -9,7 +9,11 @@ export class TraceMerge extends Transform {
   #resolver?: Resolver;
 
   constructor(resolverPromise: Promise<Resolver>) {
-    super({ objectMode: true });
+    super({
+      objectMode: true,
+      highWaterMark: Number.MAX_SAFE_INTEGER,
+    });
+
     this.#resolverPromise = resolverPromise;
   }
 

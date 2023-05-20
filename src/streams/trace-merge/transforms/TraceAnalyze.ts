@@ -1,17 +1,21 @@
-import { Transform } from 'node:stream';
+import { Writable } from 'node:stream';
 import type { TraceEvent } from 'trace-event-lib';
 import type { Resolver } from '../resolvers';
 import type { JSONLEntry } from '../../jsonl';
 
-export class TraceAnalyze extends Transform {
+export class TraceAnalyze extends Writable {
   readonly #resolver: Resolver;
 
   constructor(resolver: Resolver) {
-    super({ objectMode: true });
+    super({
+      objectMode: true,
+      highWaterMark: Number.MAX_SAFE_INTEGER,
+    });
+
     this.#resolver = resolver;
   }
 
-  _transform(
+  _write(
     chunk: unknown,
     _encoding: string,
     callback: (error?: Error | null, data?: unknown) => void,
