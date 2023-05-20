@@ -215,6 +215,8 @@ describe('end-to-end', () => {
     `);
   });
 
+  // TODO: write a test which will fail on the default highWaterMark
+
   test('should unite trace events', async () => {
     const file3 = tempy.file();
 
