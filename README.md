@@ -38,6 +38,8 @@ Once you have installed the logger, you can import it into your application and 
 normally do with Bunyan:
 
 ```js
+// Setup
+
 import { createLogger } from 'bunyan';
 import { wrapLogger, traceEventStream } from 'bunyamin';
 
@@ -55,10 +57,12 @@ const bunyan = createLogger({
 });
 
 const logger = wrapLogger({ logger: bunyan });
-const network = logger.child({ cat: 'network' });
+
+// Use
 
 logger.info('Starting the app');
 
+const network = logger.child({ cat: 'network' });
 const URL = 'https://github.com';
 const res = await network.debug.complete({ method: 'GET' }, URL, fetch(URL));
 ```
