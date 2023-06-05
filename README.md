@@ -56,7 +56,7 @@ const bunyan = createLogger({
   ],
 });
 
-const logger = wrapLogger({ logger: bunyan });
+const logger = wrapLogger(bunyan); // or, wrapLogger(bunyan, extraConfig);
 
 // Use
 
