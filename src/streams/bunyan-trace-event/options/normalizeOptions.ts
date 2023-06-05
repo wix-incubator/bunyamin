@@ -4,10 +4,10 @@ import type { ThreadGroupConfig } from '../threads';
 export function normalizeOptions(
   options: TraceEventStreamOptions,
 ): Required<TraceEventStreamOptions> {
-  options.ignoreFields ??= ['v', 'hostname', 'level', 'name'];
-  options.defaultThreadName ??= 'Main Thread';
-  options.maxConcurrency ??= 100;
-  options.strict ??= false;
+  options.ignoreFields = options.ignoreFields ?? ['v', 'hostname', 'level', 'name'];
+  options.defaultThreadName = options.defaultThreadName ?? 'Main Thread';
+  options.maxConcurrency = options.maxConcurrency ?? 100;
+  options.strict = options.strict ?? false;
   options.threadGroups = (options.threadGroups ?? []).map((threadGroup, index) =>
     typeof threadGroup === 'string'
       ? {
