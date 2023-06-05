@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import type { Readable } from 'node:stream';
 import { Transform } from 'node:stream';
-import StreamArray from 'stream-json/streamers/StreamArray';
+// eslint-disable-next-line import/extensions
+import StreamArray from 'stream-json/streamers/StreamArray.js';
 
 export function jsonlReadFile(filePath: string): Readable {
   return fs
