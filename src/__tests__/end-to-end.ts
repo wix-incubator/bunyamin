@@ -46,8 +46,8 @@ describe('end-to-end', () => {
       }),
     });
 
-    client = wrapLogger({
-      logger: createLogger({
+    client = wrapLogger(
+      createLogger({
         name: 'client',
         streams: [
           {
@@ -58,7 +58,7 @@ describe('end-to-end', () => {
           },
         ],
       }),
-    });
+    );
   });
 
   test('should log trace events', async () => {
