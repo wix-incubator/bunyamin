@@ -24,6 +24,13 @@ describe('Bunyamin', () => {
 
   test('bunyamin.logger', () => {
     expect(bunyamin.logger).toBe(logger);
+
+    bunyamin.logger = new MockLogger();
+    expect(bunyamin.logger).not.toBe(logger);
+
+    const child = bunyamin.child();
+    expect(child.logger).toBe(bunyamin.logger);
+    expect(() => (child.logger = new MockLogger())).toThrow();
   });
 
   test.each(LEVELS)('bunyamin.%s(message)', (level) => {
