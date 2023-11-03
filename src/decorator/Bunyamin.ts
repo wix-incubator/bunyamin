@@ -46,6 +46,14 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
     return this.#shared.logger;
   }
 
+  set logger(logger: Logger) {
+    if (this.#fields) {
+      throw new Error('Cannot change logger of child instance');
+    }
+
+    this.#shared.logger = logger;
+  }
+
   child(overrides?: UserFields): Bunyamin<Logger> {
     const childContext = this.#mergeFields(this.#fields, this.#transformContext(overrides));
     return new Bunyamin(this.#shared, childContext as never);
