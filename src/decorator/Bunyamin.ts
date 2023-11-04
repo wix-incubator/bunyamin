@@ -1,5 +1,6 @@
 import { deflateCategories, mergeCategories } from './categories';
 import { isActionable, isError, isObject, isPromiseLike } from '../utils';
+import type { ThreadGroupConfig } from '../streams';
 import type { ThreadID } from '../types';
 import type {
   BunyaminLogMethod,
@@ -32,6 +33,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
       this.#fields = undefined;
       this.#shared = {
         ...config,
+        threadGroups: config.threadGroups ?? [],
         messageStack: new MessageStack({
           noBeginMessage: config.noBeginMessage,
         }),
@@ -42,13 +44,21 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
     }
   }
 
+  get threadGroups(): ThreadGroupConfig[] {
+    return this.#shared.threadGroups!;
+  }
+
   get logger(): Logger {
     return this.#shared.logger;
   }
 
   set logger(logger: Logger) {
+    if (this.#shared.immutable) {
+      throw new Error('Cannot change a logger of an immutable instance');
+    }
+
     if (this.#fields) {
-      throw new Error('Cannot change logger of child instance');
+      throw new Error('Cannot change a logger of a child instance');
     }
 
     this.#shared.logger = logger;

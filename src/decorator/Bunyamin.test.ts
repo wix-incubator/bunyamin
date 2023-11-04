@@ -31,6 +31,9 @@ describe('Bunyamin', () => {
     const child = bunyamin.child();
     expect(child.logger).toBe(bunyamin.logger);
     expect(() => (child.logger = new MockLogger())).toThrow();
+
+    const immutable = new Bunyamin({ logger, immutable: true });
+    expect(() => (immutable.logger = new MockLogger())).toThrow();
   });
 
   test.each(LEVELS)('bunyamin.%s(message)', (level) => {

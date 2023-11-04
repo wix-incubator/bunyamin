@@ -8,4 +8,12 @@ export * from './uniteTraceEvents';
 export * from './wrapLogger';
 export * from './is-debug';
 
-export default new Bunyamin<BunyanLikeLogger>({ logger: noopLogger() });
+const threadGroups: any[] = [];
+export const bunyamin = new Bunyamin<BunyanLikeLogger>({ logger: noopLogger(), threadGroups });
+export const nobunyamin = new Bunyamin<BunyanLikeLogger>({
+  logger: noopLogger(),
+  threadGroups,
+  immutable: true,
+});
+
+export default bunyamin;
