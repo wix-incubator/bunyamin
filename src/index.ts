@@ -1,6 +1,4 @@
-import type { BunyanLikeLogger } from './decorator';
-import { Bunyamin } from './decorator';
-import { noopLogger } from './noopLogger';
+import realm from './realm';
 
 export * from './noopLogger';
 export * from './traceEventStream';
@@ -8,12 +6,7 @@ export * from './uniteTraceEvents';
 export * from './wrapLogger';
 export * from './is-debug';
 
-const threadGroups: any[] = [];
-export const bunyamin = new Bunyamin<BunyanLikeLogger>({ logger: noopLogger(), threadGroups });
-export const nobunyamin = new Bunyamin<BunyanLikeLogger>({
-  logger: noopLogger(),
-  threadGroups,
-  immutable: true,
-});
+export const bunyamin = realm.bunyamin;
+export const nobunyamin = realm.nobunyamin;
 
 export default bunyamin;
