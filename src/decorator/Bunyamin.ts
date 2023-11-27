@@ -1,7 +1,8 @@
 import { deflateCategories, mergeCategories } from './categories';
-import { isActionable, isError, isObject, isPromiseLike } from '../utils';
+import { isSelfDebug } from '../is-debug';
 import type { ThreadGroupConfig } from '../streams';
 import type { ThreadID } from '../types';
+import { isActionable, isError, isObject, isPromiseLike } from '../utils';
 import type {
   BunyaminLogMethod,
   BunyaminConfig,
@@ -10,6 +11,7 @@ import type {
   BunyanLogLevel,
 } from './types';
 import { MessageStack } from './message-stack';
+import { StackTraceError } from './StackTraceError';
 
 export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
   public readonly fatal = this.#setupLogMethod('fatal');
@@ -33,7 +35,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
       this.#fields = undefined;
       this.#shared = {
         ...config,
-        threadGroups: config.threadGroups ?? [],
+        loggerPriority: 0,
         messageStack: new MessageStack({
           noBeginMessage: config.noBeginMessage,
         }),
@@ -44,8 +46,9 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
     }
   }
 
+  /** @deprecated */
   get threadGroups(): ThreadGroupConfig[] {
-    return this.#shared.threadGroups!;
+    return [];
   }
 
   get logger(): Logger {
@@ -53,6 +56,10 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
   }
 
   set logger(logger: Logger) {
+    this.useLogger(logger);
+  }
+
+  useLogger(logger: Logger, priority = 0): void {
     if (this.#shared.immutable) {
       throw new Error('Cannot change a logger of an immutable instance');
     }
@@ -61,7 +68,23 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
       throw new Error('Cannot change a logger of a child instance');
     }
 
-    this.#shared.logger = logger;
+    const { stack } = isSelfDebug() ? new StackTraceError() : StackTraceError.empty();
+    const currentPriority = this.#shared.loggerPriority;
+    if (priority >= currentPriority) {
+      this.#shared.loggerPriority = priority;
+      this.#shared.logger = logger;
+      stack &&
+        this.#shared.logger.trace(
+          { cat: 'bunyamin' },
+          `bunyamin logger changed (${priority} >= ${currentPriority}), caller was:\n${stack}`,
+        );
+    } else {
+      stack &&
+        this.#shared.logger.trace(
+          { cat: 'bunyamin' },
+          `bunyamin logger not changed (${priority} < ${currentPriority}), caller was:\n${stack}`,
+        );
+    }
   }
 
   child(overrides?: UserFields): Bunyamin<Logger> {
@@ -226,5 +249,6 @@ type ResolvedFields = UserFields & {
 };
 
 type SharedBunyaminConfig<Logger extends BunyanLikeLogger> = BunyaminConfig<Logger> & {
+  loggerPriority: number;
   messageStack: MessageStack;
 };

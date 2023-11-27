@@ -8,7 +8,7 @@ export function normalizeOptions(
   options.defaultThreadName = options.defaultThreadName ?? 'Main Thread';
   options.maxConcurrency = options.maxConcurrency ?? 100;
   options.strict = options.strict ?? false;
-  options.threadGroups = (options.threadGroups ?? []).map((threadGroup, index) =>
+  options.threadGroups = [...(options.threadGroups ?? [])].map((threadGroup, index) =>
     typeof threadGroup === 'string'
       ? {
           id: threadGroup,

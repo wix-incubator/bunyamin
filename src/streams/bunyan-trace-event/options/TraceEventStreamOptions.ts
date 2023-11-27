@@ -11,7 +11,7 @@ export type TraceEventStreamOptions = {
    * running in parallel, and you want to group them together in the trace
    * viewer under the same thread name and keep the thread IDs together.
    */
-  threadGroups?: (string | ThreadGroupConfig)[];
+  threadGroups?: Iterable<string | ThreadGroupConfig>;
   /**
    * Default maximum number of concurrent threads in each thread group.
    * Must be a positive integer.
