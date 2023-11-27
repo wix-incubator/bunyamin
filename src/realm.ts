@@ -1,26 +1,38 @@
-import type { BunyanLikeLogger } from './decorator';
 import { Bunyamin } from './decorator';
 import { noopLogger } from './noopLogger';
+import { isSelfDebug } from './is-debug';
+import { ThreadGroups } from './thread-groups';
 
 type Realm = {
-  bunyamin: Bunyamin<BunyanLikeLogger>;
-  nobunyamin: Bunyamin<BunyanLikeLogger>;
+  bunyamin: Bunyamin;
+  nobunyamin: Bunyamin;
+  threadGroups: ThreadGroups;
 };
 
 function create() {
-  const threadGroups: any[] = [];
-  const bunyamin = new Bunyamin<BunyanLikeLogger>({ logger: noopLogger(), threadGroups });
-  const nobunyamin = new Bunyamin<BunyanLikeLogger>({
+  const selfDebug = isSelfDebug();
+  const bunyamin = new Bunyamin({ logger: noopLogger() });
+  const nobunyamin = new Bunyamin({
     logger: noopLogger(),
-    threadGroups,
     immutable: true,
   });
+  const threadGroups = new ThreadGroups(bunyamin);
 
-  return { bunyamin, nobunyamin };
+  if (selfDebug) {
+    bunyamin.trace({ cat: 'bunyamin' }, 'bunyamin global instance created');
+  }
+
+  return { bunyamin, nobunyamin, threadGroups };
 }
 
 function getCached(): Realm | undefined {
-  return (globalThis as any).__BUNYAMIN__;
+  const result = (globalThis as any).__BUNYAMIN__;
+
+  if (isSelfDebug() && result) {
+    result.bunyamin.trace({ cat: 'bunyamin' }, 'bunyamin global instance retrieved from cache');
+  }
+
+  return result;
 }
 
 function setCached(realm: Realm) {
