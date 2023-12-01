@@ -1,4 +1,4 @@
-import IntervalTree from '@noomorph/interval-tree';
+import IntervalTree from '@flatten-js/interval-tree';
 
 import type { ThreadAlias, ThreadID } from '../../../types';
 import { ThreadDispatcher } from './ThreadDispatcher';
