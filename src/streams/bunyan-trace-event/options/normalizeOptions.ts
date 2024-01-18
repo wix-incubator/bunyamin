@@ -36,9 +36,9 @@ function validateThreadGroup(threadGroup: ThreadGroupConfig, index: number) {
       );
     }
 
-    if (threadGroup.maxConcurrency > 100_500) {
+    if (threadGroup.maxConcurrency > 1e6) {
       throw new Error(
-        `Max concurrency (${threadGroup.id} -> ${threadGroup.maxConcurrency}) cannot be greater than 100,500`,
+        `Max concurrency (${threadGroup.id} -> ${threadGroup.maxConcurrency}) cannot be greater than 1,000,000`,
       );
     }
   }
