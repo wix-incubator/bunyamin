@@ -1,7 +1,8 @@
 import type { BunyaminConfig, BunyanLikeLogger } from './decorator';
 import { Bunyamin } from './decorator';
 
-export type * from './decorator';
+export * from './decorator/types';
+export type { Bunyamin } from './decorator';
 
 export function wrapLogger<Logger extends BunyanLikeLogger>(
   options: BunyaminConfig<Logger>,
