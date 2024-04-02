@@ -36,6 +36,88 @@ describe('Bunyamin', () => {
     expect(() => (immutable.logger = new MockLogger())).toThrow();
   });
 
+  describe('bunyamin.useLogger(logger)', () => {
+    let nextLogger: MockLogger;
+    let anotherLogger: MockLogger;
+
+    beforeEach(() => {
+      nextLogger = new MockLogger();
+      anotherLogger = new MockLogger();
+    });
+
+    test('should set the logger', () => {
+      bunyamin.useLogger(nextLogger);
+      expect(bunyamin.logger).toBe(nextLogger);
+    });
+
+    test('should override the previous logger', () => {
+      bunyamin.useLogger(nextLogger);
+      bunyamin.useLogger(anotherLogger);
+      expect(bunyamin.logger).toBe(anotherLogger);
+    });
+
+    test('should not override the logger if priority is not high enough', () => {
+      bunyamin.useLogger(nextLogger, 1);
+      bunyamin.useLogger(anotherLogger);
+      expect(bunyamin.logger).toBe(nextLogger);
+    });
+
+    test('should override the logger if priority is high enough', () => {
+      bunyamin.useLogger(nextLogger, 1);
+      bunyamin.useLogger(anotherLogger, 1);
+      expect(bunyamin.logger).toBe(anotherLogger);
+    });
+
+    test('should return bunyamin instance', () => {
+      expect(bunyamin.useLogger(nextLogger)).toBe(bunyamin);
+    });
+  });
+
+  describe('bunyamin.useTransform(fn)', () => {
+    test('should set the transformation function', () => {
+      const context = { cat: 'test', err: new Error('Some error') };
+      const transformer = jest.fn((fields: any) => {
+        return {
+          ...fields,
+          err: `#error(${fields.err.message})`,
+        };
+      });
+
+      bunyamin.useTransform(transformer);
+      bunyamin.trace(context, 'Something happened');
+      expect(transformer).toHaveBeenCalledWith(context);
+      expect(logger.trace).toHaveBeenCalledWith(
+        {
+          cat: 'test',
+          err: '#error(Some error)',
+        },
+        'Something happened',
+      );
+    });
+
+    test('should compose multiple transformation functions', () => {
+      const context = { cat: 'test' };
+      const transformer1 = jest.fn((fields: any) => ({ ...fields, x: 3 }));
+      const transformer2 = jest.fn((fields: any) => ({ ...fields, x: fields.x * 3 }));
+
+      bunyamin.useTransform(transformer1).useTransform(transformer2);
+      bunyamin.trace(context, 'Something happened');
+      expect(transformer1).toHaveBeenCalledWith(context);
+      expect(transformer2).toHaveBeenCalledWith(expect.objectContaining({ x: 3 }));
+      expect(logger.trace).toHaveBeenCalledWith(
+        {
+          cat: 'test',
+          x: 9,
+        },
+        'Something happened',
+      );
+    });
+
+    test('should return bunyamin instance', () => {
+      expect(bunyamin.useTransform((x) => x)).toBe(bunyamin);
+    });
+  });
+
   test.each(LEVELS)('bunyamin.%s(message)', (level) => {
     bunyamin[level]('message');
     expect(logger[level]).toHaveBeenCalledWith({}, 'message');
