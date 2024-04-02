@@ -2,7 +2,7 @@ import { deflateCategories, mergeCategories } from './categories';
 import { isSelfDebug } from '../is-debug';
 import type { ThreadGroupConfig } from '../streams';
 import type { ThreadID } from '../types';
-import { isActionable, isError, isObject, isPromiseLike } from '../utils';
+import { flow, isActionable, isError, isObject, isPromiseLike } from '../utils';
 import type {
   BunyaminLogMethod,
   BunyaminConfig,
@@ -59,14 +59,9 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
     this.useLogger(logger);
   }
 
-  useLogger(logger: Logger, priority = 0): void {
-    if (this.#shared.immutable) {
-      throw new Error('Cannot change a logger of an immutable instance');
-    }
-
-    if (this.#fields) {
-      throw new Error('Cannot change a logger of a child instance');
-    }
+  useLogger(logger: Logger, priority = 0): this {
+    this.#assertNotImmutable();
+    this.#assertNotChild('useLogger');
 
     const { stack } = isSelfDebug() ? new StackTraceError() : StackTraceError.empty();
     const currentPriority = this.#shared.loggerPriority;
@@ -85,6 +80,19 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
           `bunyamin logger not changed (${priority} < ${currentPriority}), caller was:\n${stack}`,
         );
     }
+
+    return this;
+  }
+
+  useTransform(transformFields: Required<BunyaminConfig<Logger>>['transformFields']): this {
+    this.#assertNotImmutable();
+    this.#assertNotChild('useTransform');
+
+    this.#shared.transformFields = this.#shared.transformFields
+      ? flow(this.#shared.transformFields, transformFields)
+      : transformFields;
+
+    return this;
   }
 
   child(overrides?: UserFields): Bunyamin<Logger> {
@@ -226,6 +234,18 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
       result.cat = deflateCategories(result.cat);
     }
     return result;
+  }
+
+  #assertNotChild(methodName: string): void {
+    if (this.#fields) {
+      throw new Error(`Method Bunyamin#${methodName} is not available for child instances`);
+    }
+  }
+
+  #assertNotImmutable(): void {
+    if (this.#shared.immutable) {
+      throw new Error('Cannot change a logger of an immutable instance');
+    }
   }
 }
 

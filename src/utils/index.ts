@@ -1,3 +1,4 @@
+export * from './flow';
 export * from './isActionable';
 export * from './isError';
 export * from './isPromiseLike';
