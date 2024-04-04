@@ -41,9 +41,9 @@ normally do with Bunyan:
 // Setup
 
 import { createLogger } from 'bunyan';
-import { wrapLogger, traceEventStream } from 'bunyamin';
+import bunyamin, { traceEventStream } from 'bunyamin';
 
-const bunyan = createLogger({
+bunyamin.logger = createLogger({
   name: 'my-app',
   streams: [
     {
@@ -56,13 +56,13 @@ const bunyan = createLogger({
   ],
 });
 
-const logger = wrapLogger(bunyan); // or, wrapLogger(bunyan, extraConfig);
+const logger = bunyamin.child({ cat: 'myapp' });
 
 // Use
 
 logger.info('Starting the app');
 
-const network = logger.child({ cat: 'network' });
+const network = logger.child({ cat: ['network' });
 const URL = 'https://github.com';
 const res = await network.debug.complete({ method: 'GET' }, URL, fetch(URL));
 ```
@@ -70,6 +70,12 @@ const res = await network.debug.complete({ method: 'GET' }, URL, fetch(URL));
 Here's how the trace file would look like when visualized in [Perfetto](https://ui.perfetto.dev):
 
 ![](https://github.com/wix-incubator/bunyamin/assets/1962469/61f728a2-1762-489b-8e46-fdf1e0b9e006)
+
+### Isolated instances
+
+```js
+```
+
 
 ## API
 
@@ -100,7 +106,7 @@ logger.info({ cat: 'login', user: 'user@example.com' }, 'User logged in');
 
 ### Duration events
 
-This library also provides support for logging duration events, which can be used to track the duration of specific operations or functions. To log a duration event, you can use the `begin` and `end` methods:
+This library also supports logging duration events, which can be used to track the duration of specific operations or functions. To log a duration event, you can use the `begin` and `end` methods:
 
 ```js
 logger.info.begin({ cat: 'login' }, 'Logging in');
