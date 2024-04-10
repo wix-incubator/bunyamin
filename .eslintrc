@@ -12,7 +12,7 @@
     "plugin:ecmascript-compat/recommended",
     "plugin:unicorn/all",
     "plugin:jsdoc/recommended",
-    "plugin:node/recommended",
+    "plugin:n/recommended",
     "plugin:prettier/recommended"
   ],
   "ignorePatterns": [
@@ -44,9 +44,14 @@
     ],
     "import/no-duplicates": "off",
     "import/no-unresolved": "error",
-    "node/no-missing-import": "off",
-    "node/no-unsupported-features/es-syntax": "off",
+    "n/no-missing-import": "off",
     "@typescript-eslint/member-ordering": "error",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_",
+      "ignoreRestSiblings": true
+    }],
     "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports" }],
     "unicorn/filename-case": "off",
     "unicorn/import-style": "off",
@@ -71,8 +76,8 @@
       ],
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
-        "node/no-unpublished-import": "off",
-        "node/no-extraneous-import": "off",
+        "n/no-unpublished-import": "off",
+        "n/no-extraneous-import": "off",
         "no-only-tests/no-only-tests": "error"
       }
     }
