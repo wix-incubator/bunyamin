@@ -24,5 +24,7 @@ export type BunyaminConfig<Logger extends BunyanLikeLogger> = {
   /**
    * Optional transformation of log record fields provided by the user.
    */
-  transformFields?: <T extends BunyaminLogRecordFields>(context: T | undefined) => T | undefined;
+  transformFields?: (
+    fields: BunyaminLogRecordFields | undefined,
+  ) => BunyaminLogRecordFields | undefined;
 };

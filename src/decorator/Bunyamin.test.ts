@@ -95,6 +95,22 @@ describe('Bunyamin', () => {
       );
     });
 
+    test('should process begin-end events', () => {
+      let counter = 0;
+      const transformer = jest.fn((fields: any) => {
+        return { ...fields, index: counter++ };
+      });
+
+      bunyamin.useTransform(transformer);
+      expect(() => bunyamin.trace.complete('something', willThrow)).toThrow('error');
+      expect(transformer).toHaveBeenCalledTimes(2);
+      expect(logger.trace).toHaveBeenCalledWith({ ph: 'B', index: 0 }, 'something');
+      expect(logger.trace).toHaveBeenCalledWith(
+        { ph: 'E', success: false, err: 'error', index: 1 },
+        'something',
+      );
+    });
+
     test('should compose multiple transformation functions', () => {
       const context = { cat: 'test' };
       const transformer1 = jest.fn((fields: any) => ({ ...fields, x: 3 }));
@@ -333,3 +349,7 @@ describe('Bunyamin', () => {
     error = jest.fn();
   }
 });
+
+function willThrow() {
+  throw 'error';
+}
