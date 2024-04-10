@@ -158,7 +158,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
   ): T {
     const end = (customContext: EndContext) => {
       const endContext = {
-        ...customContext,
+        ...this.#transformContext(customContext),
         ph: 'E',
         tid: fields.tid,
       } as ResolvedFields;
@@ -194,8 +194,8 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
       userContext === undefined
         ? arguments_
         : isError(arguments_[0]) && arguments_.length === 1
-        ? [arguments_[0].message]
-        : arguments_.slice(1);
+          ? [arguments_[0].message]
+          : arguments_.slice(1);
 
     return {
       fields: this.#resolveFields(fields, phase),
