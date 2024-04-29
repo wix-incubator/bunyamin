@@ -1,5 +1,5 @@
-import type { TraceEventStreamOptions } from './TraceEventStreamOptions';
 import type { ThreadGroupConfig } from '../threads';
+import type { TraceEventStreamOptions } from './TraceEventStreamOptions';
 
 export function normalizeOptions(
   options: TraceEventStreamOptions,
@@ -8,14 +8,16 @@ export function normalizeOptions(
   options.defaultThreadName = options.defaultThreadName ?? 'Main Thread';
   options.maxConcurrency = options.maxConcurrency ?? 100;
   options.strict = options.strict ?? false;
-  options.threadGroups = [...(options.threadGroups ?? [])].map((threadGroup, index) =>
-    typeof threadGroup === 'string'
-      ? {
-          id: threadGroup,
-          displayName: threadGroup,
-        }
-      : validateThreadGroup(threadGroup, index),
-  );
+  options.threadGroups = Array.isArray(options.threadGroups)
+    ? options.threadGroups.map((threadGroup, index) =>
+        typeof threadGroup === 'string'
+          ? {
+              id: threadGroup,
+              displayName: threadGroup,
+            }
+          : validateThreadGroup(threadGroup, index),
+      )
+    : options.threadGroups ?? [];
 
   if (options.maxConcurrency < 1) {
     throw new Error(`maxConcurrency must be at least 1, got ${options.maxConcurrency}`);

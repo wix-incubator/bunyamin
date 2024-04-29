@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 import { beforeEach, describe, expect, jest, it } from '@jest/globals';
 import type { ThreadGroups } from './ThreadGroups';
 import { wrapLogger } from '../wrapLogger';
 import type { Bunyamin } from '../decorator';
 
 describe('ThreadGroups', () => {
-  let ThreadGroups: new (logger: Bunyamin) => ThreadGroups;
+  let ThreadGroups: typeof import('./ThreadGroups').ThreadGroups;
   let threadGroups: ThreadGroups;
   let isDebug: jest.Mocked<any>;
   let logger: Bunyamin;
@@ -26,7 +27,7 @@ describe('ThreadGroups', () => {
   describe('in regular mode', () => {
     beforeEach(() => {
       isDebug.isSelfDebug.mockReturnValue(false);
-      threadGroups = new ThreadGroups(logger);
+      threadGroups = new ThreadGroups(() => logger);
     });
 
     it('should be empty by default', () => {
@@ -47,7 +48,7 @@ describe('ThreadGroups', () => {
   describe('in debug mode', () => {
     beforeEach(() => {
       isDebug.isSelfDebug.mockReturnValue(true);
-      threadGroups = new ThreadGroups(logger);
+      threadGroups = new ThreadGroups(() => logger);
     });
 
     it('should call logger.trace upon addition', () => {

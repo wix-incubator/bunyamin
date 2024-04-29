@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import { Bunyamin } from './decorator';
 import { noopLogger } from './noopLogger';
 import { isSelfDebug } from './is-debug';
@@ -10,13 +11,22 @@ type Realm = {
 };
 
 function create() {
+  let bunyamin: Bunyamin;
+  let nobunyamin: Bunyamin;
+
   const selfDebug = isSelfDebug();
-  const bunyamin = new Bunyamin({ logger: noopLogger() });
-  const nobunyamin = new Bunyamin({
+  const threadGroups = new ThreadGroups(() => bunyamin);
+
+  bunyamin = new Bunyamin({
     logger: noopLogger(),
-    immutable: true,
+    threadGroups,
   });
-  const threadGroups = new ThreadGroups(bunyamin);
+
+  nobunyamin = new Bunyamin({
+    immutable: true,
+    logger: noopLogger(),
+    threadGroups,
+  });
 
   if (selfDebug) {
     bunyamin.trace({ cat: 'bunyamin' }, 'bunyamin global instance created');

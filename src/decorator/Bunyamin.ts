@@ -4,8 +4,8 @@ import type { ThreadGroupConfig } from '../streams';
 import type { ThreadID } from '../types';
 import { flow, isActionable, isError, isObject, isPromiseLike } from '../utils';
 import type {
-  BunyaminLogMethod,
   BunyaminConfig,
+  BunyaminLogMethod,
   BunyaminLogRecordFields as UserFields,
   BunyanLikeLogger,
   BunyanLogLevel,
@@ -48,7 +48,7 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
 
   /** @deprecated */
   get threadGroups(): ThreadGroupConfig[] {
-    return [];
+    return [...(this.#shared.threadGroups ?? [])];
   }
 
   get logger(): Logger {

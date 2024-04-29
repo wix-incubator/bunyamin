@@ -27,11 +27,9 @@ export class BunyanTraceEventStream extends Transform {
       strict: options.strict ?? false,
       defaultThreadName: options.defaultThreadName ?? 'Main Thread',
       maxConcurrency: options.maxConcurrency ?? 100,
+      // Lazy to add a `NormalizedOptions...` type, so we just cast it here.
+      threadGroups: options.threadGroups as Iterable<ThreadGroupConfig>,
     });
-
-    for (const threadGroup of options.threadGroups) {
-      this.#threadGroupDispatcher.registerThreadGroup(threadGroup as ThreadGroupConfig);
-    }
   }
 
   _transform(
