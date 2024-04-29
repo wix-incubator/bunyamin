@@ -8,6 +8,7 @@ export type ThreadGroupDispatcherConfig = {
   defaultThreadName: string;
   maxConcurrency: number;
   strict: boolean;
+  threadGroups: Iterable<ThreadGroupConfig>;
 };
 
 export class ThreadGroupDispatcher {
@@ -15,29 +16,22 @@ export class ThreadGroupDispatcher {
   readonly #dispatchers: Record<string, ThreadDispatcher> = {};
   readonly #maxConcurrency: number;
   readonly #defaultThreadName: string;
+  readonly #threadGroups: Iterable<ThreadGroupConfig>;
   readonly #names: IntervalTree = new IntervalTree();
 
   #freeThreadId = 1;
+  #initialized = false;
 
   constructor(options: ThreadGroupDispatcherConfig) {
     this.#defaultThreadName = options.defaultThreadName;
     this.#maxConcurrency = options.maxConcurrency;
     this.#strict = options.strict;
-  }
-
-  registerThreadGroup(config: ThreadGroupConfig): this {
-    const maxConcurrency = config.maxConcurrency ?? this.#maxConcurrency;
-    const min = this.#freeThreadId;
-    const max = min + maxConcurrency - 1;
-
-    this.#dispatchers[config.id] = new ThreadDispatcher(config.displayName, this.#strict, min, max);
-    this.#names.insert([min, max], config.displayName);
-    this.#freeThreadId = max + 1;
-
-    return this;
+    this.#threadGroups = options.threadGroups;
   }
 
   name(tid: number): string | undefined {
+    this.#ensureInitialized();
+
     if (tid === 0) {
       return this.#defaultThreadName;
     }
@@ -46,6 +40,8 @@ export class ThreadGroupDispatcher {
   }
 
   resolve(ph: string | undefined, tid: ThreadID | undefined): number | Error {
+    this.#ensureInitialized();
+
     if (tid == null) {
       return 0;
     }
@@ -74,7 +70,29 @@ export class ThreadGroupDispatcher {
     }
   }
 
-  #resolveDispatcher(threadAlias: ThreadAlias): ThreadDispatcher {
+  #ensureInitialized() {
+    if (!this.#initialized) {
+      this.#initialized = true;
+
+      for (const group of this.#threadGroups) {
+        this.#registerThreadGroup(group);
+      }
+    }
+  }
+
+  #registerThreadGroup(config: ThreadGroupConfig): this {
+    const maxConcurrency = config.maxConcurrency ?? this.#maxConcurrency;
+    const min = this.#freeThreadId;
+    const max = min + maxConcurrency - 1;
+
+    this.#dispatchers[config.id] = new ThreadDispatcher(config.displayName, this.#strict, min, max);
+    this.#names.insert([min, max], config.displayName);
+    this.#freeThreadId = max + 1;
+
+    return this;
+  }
+
+  #resolveDispatcher(threadAlias: ThreadAlias): ThreadDispatcher | undefined {
     const groupName = typeof threadAlias === 'string' ? threadAlias : threadAlias[0];
     return this.#ensureGroupDispatcher(groupName);
   }
@@ -89,9 +107,9 @@ export class ThreadGroupDispatcher {
       : threadAlias[1];
   }
 
-  #ensureGroupDispatcher(threadGroup: string): ThreadDispatcher {
+  #ensureGroupDispatcher(threadGroup: string): ThreadDispatcher | undefined {
     if (!this.#dispatchers[threadGroup] && !this.#strict) {
-      this.registerThreadGroup({ id: threadGroup, displayName: threadGroup });
+      this.#registerThreadGroup({ id: threadGroup, displayName: threadGroup });
     }
 
     return this.#dispatchers[threadGroup];

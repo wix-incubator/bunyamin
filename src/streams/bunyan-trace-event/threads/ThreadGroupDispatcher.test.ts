@@ -11,10 +11,12 @@ describe('ThreadGroupDispatcher', () => {
       defaultThreadName: 'Main Thread',
       maxConcurrency: 100,
       strict: false,
-    })
-      .registerThreadGroup({ id: 'foo', displayName: 'A' })
-      .registerThreadGroup({ id: 'bar', displayName: 'B', maxConcurrency: 2 })
-      .registerThreadGroup({ id: 'baz', displayName: 'C', maxConcurrency: 3 });
+      threadGroups: [
+        { id: 'foo', displayName: 'A' },
+        { id: 'bar', displayName: 'B', maxConcurrency: 2 },
+        { id: 'baz', displayName: 'C', maxConcurrency: 3 },
+      ],
+    });
   });
 
   it.each(PHASES)('should fallback to 0 for null tid (ph = %j)', (ph) => {
@@ -74,9 +76,12 @@ describe('ThreadGroupDispatcher', () => {
         defaultThreadName: 'Main Thread',
         maxConcurrency: 2,
         strict: true,
-      }).registerThreadGroup({
-        id: 'foo',
-        displayName: 'A',
+        threadGroups: [
+          {
+            id: 'foo',
+            displayName: 'A',
+          },
+        ],
       });
     });
 
@@ -106,9 +111,12 @@ describe('ThreadGroupDispatcher', () => {
         defaultThreadName: 'Main Thread',
         maxConcurrency: 1,
         strict: true,
-      }).registerThreadGroup({
-        id: 'foo',
-        displayName: 'Single Thread',
+        threadGroups: [
+          {
+            id: 'foo',
+            displayName: 'Single Thread',
+          },
+        ],
       });
 
       expect(dispatcher.resolve('B', 'foo')).toBe(1);
@@ -127,9 +135,12 @@ describe('ThreadGroupDispatcher', () => {
         defaultThreadName: 'Main Thread',
         maxConcurrency: 2,
         strict: false,
-      }).registerThreadGroup({
-        id: 'foo',
-        displayName: 'A',
+        threadGroups: [
+          {
+            id: 'foo',
+            displayName: 'A',
+          },
+        ],
       });
     });
 

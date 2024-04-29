@@ -14,7 +14,7 @@ export type BunyaminConfig<Logger extends BunyanLikeLogger> = {
   /**
    * Thread groups to be used for grouping log records.
    */
-  threadGroups?: ThreadGroupConfig[];
+  threadGroups?: Iterable<ThreadGroupConfig>;
   /**
    * Fallback message to be used when there was no previous message
    * passed with {@link BunyaminLogMethod#begin}.

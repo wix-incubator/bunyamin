@@ -3,13 +3,13 @@ import type { ThreadGroupConfig } from '../streams';
 import { isSelfDebug } from '../is-debug';
 import { StackTraceError } from '../decorator/StackTraceError';
 
-export class ThreadGroups {
-  readonly #bunyamin: Bunyamin;
+export class ThreadGroups implements Iterable<ThreadGroupConfig> {
   readonly #debugMode = isSelfDebug();
+  readonly #getBunyamin: () => Bunyamin;
   readonly #groups = new Map<string, ThreadGroupConfig>();
 
-  constructor(bunyamin: Bunyamin) {
-    this.#bunyamin = bunyamin;
+  constructor(getBunyamin: () => Bunyamin) {
+    this.#getBunyamin = getBunyamin;
     this.#groups = new Map();
   }
 
@@ -32,7 +32,7 @@ export class ThreadGroups {
 
   #logAddition(group: ThreadGroupConfig, action: string) {
     const { stack } = new StackTraceError();
-    this.#bunyamin.trace(
+    this.#getBunyamin().trace(
       { cat: 'bunyamin' },
       `thread group ${action}: ${group.id} (${group.displayName})\n\n${stack}`,
     );
