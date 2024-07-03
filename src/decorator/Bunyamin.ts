@@ -160,8 +160,15 @@ export class Bunyamin<Logger extends BunyanLikeLogger = BunyanLikeLogger> {
       const endContext = {
         ...this.#transformContext(customContext),
         ph: 'E',
-        tid: fields.tid,
       } as ResolvedFields;
+
+      if (fields.tid !== undefined) {
+        endContext.tid = fields.tid;
+      }
+
+      if (fields.level !== undefined) {
+        endContext.level = fields.level;
+      }
 
       this.#endInternal(level, endContext, []);
     };
@@ -266,6 +273,15 @@ type ResolvedFields = UserFields & {
   cat?: string;
   ph?: 'B' | 'E';
   tid?: ThreadID;
+  /**
+   * 10 - trace
+   * 20 - debug
+   * 30 - info
+   * 40 - warn
+   * 50 - error
+   * 60 - fatal
+   */
+  level?: number;
 };
 
 type SharedBunyaminConfig<Logger extends BunyanLikeLogger> = BunyaminConfig<Logger> & {
